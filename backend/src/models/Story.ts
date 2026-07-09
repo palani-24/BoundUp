@@ -1,0 +1,3 @@
+import mongoose, { Schema } from 'mongoose';
+const StorySchema = new Schema({ user: { type: Schema.Types.ObjectId, ref: 'User' }, type: { type: String, enum: ['photo','video','music'], default: 'photo' }, mediaUrl: String, caption: String, viewers: [{ type: Schema.Types.ObjectId, ref: 'User' }], reactions: [{ user: { type: Schema.Types.ObjectId, ref: 'User' }, reaction: String }], expiresAt: { type: Date, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), index: { expires: 0 } }, archived: { type: Boolean, default: false } }, { timestamps: true });
+export const Story = mongoose.model('Story', StorySchema);
