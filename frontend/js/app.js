@@ -1063,18 +1063,31 @@
   }
 
   /* ADVANCED PROFILE & EDIT PROFILE CONTROLLER */
-  function getStoredProfile(){
-    const defaultProfile = {
-      name: 'Sam Bound',
-      username: 'itz_sam',
-      bio: 'Dreamer • Gamer • Creator 🚀',
+  function getStoredProfile(targetUser){
+    const currentUser = targetUser || store.get('user') || 'itz_sam';
+    const defaultProfiles = {
+      'itz_sam': { name: 'Sam Bound', username: 'itz_sam', bio: 'Dreamer • Gamer • Creator 🚀', category: '🚀 Creator', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', anthem: '💕 Kadhale Kadhale • Flute Romance', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3', followers: '12.4K', following: '256' },
+      'riya.vibe': { name: 'Riya Music', username: 'riya.vibe', bio: 'Music stories & Tamil BGM drops daily 🎵', category: '🎵 Music & Songs', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80', anthem: '💕 Nira Nira • Acoustic Sunset', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70512.mp3?filename=acoustic-guitar-love-song-18945.mp3', followers: '48.2K', following: '120' },
+      'arun_gaming': { name: 'Arun Gaming', username: 'arun_gaming', bio: 'Live streaming & esports tournament 🎮', category: '🎮 Gaming Aura', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80', anthem: '🔥 Tamil Mass BGM Drop', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8b74a3f12.mp3?filename=mass-bass-drop-action-19823.mp3', followers: '32.1K', following: '88' },
+      'nila_voice': { name: 'Nila Voice', username: 'nila_voice', bio: 'Singer & voiceover artist 🎙️', category: '🎙️ Voice & Songs', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80', anthem: '💕 Kannazhaga • Soft Violin', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=violin-romantic-cinematic-11023.mp3', followers: '21.5K', following: '150' },
+      'vicky_creator': { name: 'Vicky Creator', username: 'vicky_creator', bio: 'VFX Motion & Cinematic Edits 🎬', category: '🎬 VFX & Motion', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', anthem: '🎧 Chill Lo-Fi Beat', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db65912a77.mp3?filename=chill-lofi-song-110321.mp3', followers: '15.8K', following: '95' }
+    };
+
+    const base = defaultProfiles[currentUser] || {
+      name: currentUser.charAt(0).toUpperCase() + currentUser.slice(1),
+      username: currentUser,
+      bio: 'BoundUp Creator 🚀',
       category: '🚀 Creator',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
       cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
       anthem: '💕 Kadhale Kadhale • Flute Romance',
-      anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3'
+      anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3',
+      followers: '0',
+      following: '0'
     };
-    return Object.assign(defaultProfile, store.json('user_profile', {}));
+
+    const perAccountCustom = store.json('user_profile_' + currentUser, {});
+    return Object.assign(base, perAccountCustom);
   }
 
   function renderProfile(){
@@ -1084,25 +1097,7 @@
     const loggedInUser = store.get('user') || 'itz_sam';
     const targetUsername = requestedUser || loggedInUser;
 
-    const allReg = getRegisteredUsers();
-    let profile = allReg[targetUsername];
-    if(!profile){
-      profile = (targetUsername === loggedInUser) ? getStoredProfile() : {
-        name: targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1),
-        username: targetUsername,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-        cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-        bio: 'BoundUp Creator 🚀',
-        category: '🚀 Creator',
-        followers: '0',
-        following: '0',
-        anthem: '💕 Kadhale Kadhale • Flute Romance',
-        anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3'
-      };
-    } else if(targetUsername === loggedInUser){
-      profile = Object.assign(profile, store.json('user_profile', {}));
-    }
-
+    const profile = getStoredProfile(targetUsername);
     const isOwnProfile = (targetUsername === loggedInUser);
 
     const avatarImg = $('#profileAvatarImg');
@@ -1193,16 +1188,18 @@
       followersModal.classList.remove('hidden');
     };
 
-    if(openFollowersBtn) openFollowersBtn.addEventListener('click', ()=> showFollowers('Followers (12.4K)'));
-    if(openFollowingBtn) openFollowingBtn.addEventListener('click', ()=> showFollowers('Following (256)'));
+    if(openFollowersBtn) openFollowersBtn.addEventListener('click', ()=> showFollowers(`Followers (${profile.followers || '12.4K'})`));
+    if(openFollowingBtn) openFollowingBtn.addEventListener('click', ()=> showFollowers(`Following (${profile.following || '256'})`));
     if(closeFollowersBtn) closeFollowersBtn.addEventListener('click', ()=> followersModal.classList.add('hidden'));
 
-    // Profile Tabs
+    // Profile Tabs & Filtered Grid
     if(grid){
       const renderTabGrid = (tabKey) => {
         if(tabKey === 'reels'){
-          const reels = store.json('custom_reels', []).concat(D.reels);
-          grid.innerHTML = reels.map(r=>`<a class="grid-card tall" data-info="🎬 ${r.views} views" href="reels.html"><img src="${r.img}"></a>`).join('');
+          const customReels = store.json('custom_reels', []);
+          const allReels = customReels.concat(D.reels);
+          const userReels = allReels.filter(r => (r.author === targetUsername || r.user === targetUsername || isOwnProfile));
+          grid.innerHTML = (userReels.length ? userReels : D.reels).map(r=>`<a class="grid-card tall" data-info="🎬 ${r.views || '1.2K'} views" href="reels.html"><img src="${r.img}"></a>`).join('');
         } else if(tabKey === 'saved'){
           const savedIds = store.json('saved', [101, 102]);
           const posts = D.posts.filter(p => savedIds.includes(p.id));
@@ -1211,7 +1208,7 @@
           grid.innerHTML = `
             <div class="glass" style="grid-column:1/-1;padding:32px;text-align:center;border-radius:24px;">
               <div class="sound-wave-icon" style="margin:0 auto 14px;"><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span></div>
-              <h2 style="margin:0;font-size:24px;font-weight:900">${profile.anthem}</h2>
+              <h2 style="margin:0;font-size:24px;font-weight:900">${profile.anthem || '💕 Kadhale Kadhale • Flute Romance'}</h2>
               <p style="color:var(--muted);margin:8px 0 18px">Active Profile Anthem Song • Playing on profile visits</p>
               <button type="button" class="primary-btn" id="tabPlayAnthemBtn">▶ Play Real Song Audio</button>
             </div>
@@ -1222,7 +1219,8 @@
         } else {
           const customPosts = store.json('custom_posts', []);
           const allPosts = [...customPosts, ...D.posts];
-          grid.innerHTML = allPosts.map(p => `<a class="grid-card" data-info="♡ ${(p.likes||100).toLocaleString()}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
+          const userPosts = allPosts.filter(p => (p.author === targetUsername || p.user === targetUsername || (isOwnProfile && (p.user === 1 || p.author === targetUsername))));
+          grid.innerHTML = (userPosts.length ? userPosts : D.posts).map(p => `<a class="grid-card" data-info="♡ ${(p.likes||100).toLocaleString()}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
         }
       };
 
@@ -1328,7 +1326,8 @@
 
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const current = getStoredProfile();
+      const currentUser = store.get('user') || 'itz_sam';
+      const current = getStoredProfile(currentUser);
 
       const updated = {
         name: $('#editNameInput')?.value.trim() || current.name,
@@ -1338,9 +1337,12 @@
         anthem: $('#editAnthemSelect')?.value || current.anthem,
         avatar: newAvatarUrl || current.avatar,
         cover: newCoverUrl || current.cover,
-        anthemSrc: current.anthemSrc
+        anthemSrc: current.anthemSrc,
+        followers: current.followers || '0',
+        following: current.following || '0'
       };
 
+      store.setJson('user_profile_' + currentUser, updated);
       store.setJson('user_profile', updated);
       store.set('user', updated.username);
       store.set('chat_user', updated.username);
@@ -1355,7 +1357,7 @@
       renderFeed();
       renderRightPanel();
       renderStories();
-      toast('🚀 Profile & Avatars Updated Everywhere!');
+      toast(`🚀 Profile & Avatars for @${updated.username} Updated!`);
     });
   }
 
