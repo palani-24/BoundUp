@@ -22,45 +22,119 @@
           <div class="feed-col">
             <div id="stories" class="stories glass"></div>
             
-            <section id="create" class="post">
+            <section id="create" class="post glass glow-card">
               <form id="createPostForm">
-                <div class="post-head">
+                <div class="post-head" style="border-bottom:1px solid var(--line);padding:14px 16px;">
                   <div class="user-mini">
                     <img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Avatar">
-                    <span><b>Create Post / Video Reel</b><small>Upload photos or MP4 videos with sound</small></span>
+                    <span><b>BoundUp Creator Suite</b><small>Share Feed Post, HD Reel or Instant Story</small></span>
                   </div>
                 </div>
-                <div class="post-body">
-                  <textarea id="newCaption" rows="3" placeholder="What's happening on BoundUp? Write a caption..." style="width:100%;border:0;background:var(--panel2);border-radius:18px;padding:14px;color:var(--text);outline:0;resize:vertical"></textarea>
+
+                <!-- Create Type Tabs (Post / Reel / Story) -->
+                <div class="create-tab-bar">
+                  <button type="button" class="create-tab-btn active" data-tab="post">📸 Feed Post</button>
+                  <button type="button" class="create-tab-btn" data-tab="reel">🎬 HD Reel</button>
+                  <button type="button" class="create-tab-btn" data-tab="story">📖 Story</button>
+                </div>
+
+                <div class="post-body" style="padding:16px;">
+                  <!-- Caption / Text Field -->
+                  <textarea id="newCaption" rows="3" placeholder="What's on your mind? Write caption..." style="width:100%;border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:14px;color:var(--text);outline:0;resize:vertical"></textarea>
                   
                   <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display:none">
-                  
+
+                  <!-- Common Media Preview -->
                   <div id="mediaPreviewContainer" class="media-preview-box hidden" style="width:100%;margin-top:12px;">
                     <img id="mediaPreviewImg" src="" alt="Upload Preview" class="hidden">
-                    <video id="mediaPreviewVideo" controls src="" class="hidden" style="width:100%;max-height:240px;border-radius:16px;object-fit:cover;"></video>
+                    <video id="mediaPreviewVideo" controls src="" class="hidden" style="width:100%;max-height:260px;border-radius:16px;object-fit:cover;"></video>
                     <button type="button" class="remove-media" id="removeMediaBtn">✕</button>
                   </div>
 
-                  <div id="audioSelectContainer" class="sound-select-row hidden">
-                    <span style="font-size:13px;font-weight:800">🎵 Audio Track:</span>
-                    <select id="videoAudioTrackSelect">
-                      <option value="love1">💕 Kadhale Kadhale • Flute Romance</option>
-                      <option value="love2">💕 Nira Nira • Acoustic Sunset</option>
-                      <option value="love3">💕 Kannazhaga • Soft Violin</option>
-                      <option value="love4">💕 Anbae Anbae • Acoustic Cut</option>
-                      <option value="love5">💕 Unakkaga • Piano Romance</option>
-                      <option value="mass">🔥 Tamil Mass BGM Drop</option>
-                      <option value="chill">🎧 Chill Lo-Fi Beat</option>
-                      <option value="original">🎙️ Original Video Audio</option>
-                    </select>
+                  <!-- 📸 1. POST EDIT OPTIONS -->
+                  <div id="postEditOptions" class="create-options-panel">
+                    <div class="edit-row">
+                      <label>🎨 Filter:</label>
+                      <select id="postFilterSelect">
+                        <option value="none">✨ Normal (No Filter)</option>
+                        <option value="sepia(0.6)">📜 Vintage Sepia</option>
+                        <option value="grayscale(1)">🏁 Grayscale</option>
+                        <option value="saturate(1.8)">🌈 Neon Saturate</option>
+                        <option value="contrast(1.4) hue-rotate(15deg)">🌅 Warm Sunset</option>
+                      </select>
+                    </div>
+                    <div class="edit-row">
+                      <label>📍 Location:</label>
+                      <input id="postLocationInput" placeholder="Add location (e.g. Chennai, India)">
+                    </div>
+                    <div class="edit-row">
+                      <label>🏷️ Tag People:</label>
+                      <input id="postTagInput" placeholder="Tag friends (e.g. @riya.vibe)">
+                    </div>
                   </div>
-                  
-                  <div class="btn-row" style="align-items:center;justify-content:space-between;margin-top:12px;">
+
+                  <!-- 🎬 2. REEL EDIT OPTIONS -->
+                  <div id="reelEditOptions" class="create-options-panel hidden">
+                    <div class="edit-row">
+                      <label>🎵 Audio Track:</label>
+                      <select id="videoAudioTrackSelect">
+                        <option value="love1">💕 Kadhale Kadhale • Flute Romance</option>
+                        <option value="love2">💕 Nira Nira • Acoustic Sunset</option>
+                        <option value="love3">💕 Kannazhaga • Soft Violin</option>
+                        <option value="love4">💕 Anbae Anbae • Acoustic Cut</option>
+                        <option value="love5">💕 Unakkaga • Piano Romance</option>
+                        <option value="mass">🔥 Tamil Mass BGM Drop</option>
+                        <option value="chill">🎧 Chill Lo-Fi Beat</option>
+                        <option value="original">🎙️ Original Video Sound</option>
+                      </select>
+                    </div>
+                    <div class="edit-row">
+                      <label>⚡ Playback Speed:</label>
+                      <select id="reelSpeedSelect">
+                        <option value="1">1.0x (Normal Speed)</option>
+                        <option value="0.5">0.5x (Slow Motion)</option>
+                        <option value="1.5">1.5x (Fast Vibe)</option>
+                        <option value="2">2.0x (Hyper Speed)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- 📖 3. STORY EDIT OPTIONS -->
+                  <div id="storyEditOptions" class="create-options-panel hidden">
+                    <div class="edit-row">
+                      <label>🎨 Background Canvas:</label>
+                      <select id="storyBgSelect">
+                        <option value="linear-gradient(135deg, #ff6b00, #7c2cff)">🔥 Neon Orange & Purple</option>
+                        <option value="linear-gradient(135deg, #00f0ff, #7c2cff)">🌌 Cyber Cyan</option>
+                        <option value="linear-gradient(135deg, #ff007a, #ff6b00)">🌸 Sunset Pink</option>
+                        <option value="linear-gradient(135deg, #10b981, #064e3b)">🌲 Emerald Green</option>
+                      </select>
+                    </div>
+                    <div class="edit-row">
+                      <label>🎵 Story BGM:</label>
+                      <select id="storyMusicSelect">
+                        <option value="love1">💕 Romantic Flute BGM</option>
+                        <option value="love2">🎸 Acoustic Love Melody</option>
+                        <option value="chill">🎧 Chill Lo-Fi Vibe</option>
+                      </select>
+                    </div>
+                    <div class="edit-row">
+                      <label>⏳ Expiry Duration:</label>
+                      <select id="storyDurationSelect">
+                        <option value="24h">24 Hours (Standard Story)</option>
+                        <option value="12h">12 Hours (Quick Story)</option>
+                        <option value="permanent">⭐ Permanent Highlight</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="btn-row" style="align-items:center;justify-content:space-between;margin-top:14px;">
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                      <button type="button" class="ghost-btn" id="uploadFileTrigger">🎬 Add Video / Photo</button>
+                      <button type="button" class="ghost-btn" id="uploadFileTrigger">🎬 Add Media</button>
                       <button type="button" class="ghost-btn" id="aiCaptionBtn">✨ AI Caption</button>
                     </div>
-                    <button class="primary-btn" id="createPostSubmitBtn">Publish Post</button>
+                    <button class="primary-btn" id="createSubmitBtn">Publish Feed Post 🚀</button>
                   </div>
                 </div>
               </form>

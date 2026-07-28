@@ -57,7 +57,9 @@
 
   function renderStories(){
     const el=$('#stories'); if(!el) return;
-    el.innerHTML = D.users.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer"><div class="story-ring"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username}</small></div>`).join('');
+    const customStories = store.json('custom_stories', []);
+    const allUsers = [...customStories, ...D.users];
+    el.innerHTML = allUsers.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer"><div class="story-ring ${u.isCustom ? 'live-badge-glow' : ''}"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username || u.name}</small></div>`).join('');
     $$('.js-story-open').forEach(btn => btn.addEventListener('click', () => {
       openStoryViewer(Number(btn.dataset.index));
     }));
@@ -67,14 +69,16 @@
     currentStoryIndex = index;
     const modal = $('#storyViewerModal');
     if(!modal) return;
-    const user = D.users[currentStoryIndex] || D.users[0];
+    const customStories = store.json('custom_stories', []);
+    const allUsers = [...customStories, ...D.users];
+    const user = allUsers[currentStoryIndex] || allUsers[0];
     const imgEl = $('#storyImg');
     const avatarEl = $('#storyAvatar');
     const userEl = $('#storyUsername');
 
-    if(imgEl) imgEl.src = D.posts[currentStoryIndex % D.posts.length]?.img || user.avatar;
+    if(imgEl) imgEl.src = user.storyImg || D.posts[currentStoryIndex % D.posts.length]?.img || user.avatar;
     if(avatarEl) avatarEl.src = user.avatar;
-    if(userEl) userEl.innerHTML = `<b>${user.username}</b> <small style="opacity:0.7">${user.name}</small>`;
+    if(userEl) userEl.innerHTML = `<b>${user.username || user.name}</b> <small style="opacity:0.7">${user.name || ''}</small>`;
     
     modal.classList.remove('hidden');
     startStoryProgress();
@@ -1132,9 +1136,36 @@
     const previewContainer = $('#mediaPreviewContainer');
     const previewImg = $('#mediaPreviewImg');
     const previewVideo = $('#mediaPreviewVideo');
-    const audioSelectContainer = $('#audioSelectContainer');
     const removeMediaBtn = $('#removeMediaBtn');
     const aiCaptionBtn = $('#aiCaptionBtn');
+    const submitBtn = $('#createSubmitBtn');
+
+    let currentActiveTab = 'post'; // 'post' | 'reel' | 'story'
+
+    // Tab Switching Buttons
+    $$('.create-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('.create-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentActiveTab = btn.dataset.tab;
+
+        const postPanel = $('#postEditOptions');
+        const reelPanel = $('#reelEditOptions');
+        const storyPanel = $('#storyEditOptions');
+
+        if(postPanel) postPanel.classList.toggle('hidden', currentActiveTab !== 'post');
+        if(reelPanel) reelPanel.classList.toggle('hidden', currentActiveTab !== 'reel');
+        if(storyPanel) storyPanel.classList.toggle('hidden', currentActiveTab !== 'story');
+
+        if(submitBtn){
+          if(currentActiveTab === 'post') submitBtn.textContent = 'Publish Feed Post 🚀';
+          else if(currentActiveTab === 'reel') submitBtn.textContent = 'Publish HD Reel 🎬';
+          else if(currentActiveTab === 'story') submitBtn.textContent = 'Publish Story 📖';
+        }
+
+        toast(currentActiveTab === 'post' ? '📸 Post mode active' : currentActiveTab === 'reel' ? '🎬 Reel mode active' : '📖 Story mode active');
+      });
+    });
 
     if(fileTrigger && fileInput){
       fileTrigger.addEventListener('click', ()=> fileInput.click());
@@ -1157,17 +1188,15 @@
               previewVideo.src = uploadedMediaUrl;
               previewVideo.classList.remove('hidden');
             }
-            if(audioSelectContainer) audioSelectContainer.classList.remove('hidden');
           } else {
             if(previewVideo) previewVideo.classList.add('hidden');
             if(previewImg){
               previewImg.src = uploadedMediaUrl;
               previewImg.classList.remove('hidden');
             }
-            if(audioSelectContainer) audioSelectContainer.classList.add('hidden');
           }
           if(previewContainer) previewContainer.classList.remove('hidden');
-          toast(isVid ? '🎬 Video loaded! Sound track ready' : '📷 Photo loaded');
+          toast(isVid ? '🎬 Video media attached' : '📷 Photo media attached');
         };
         reader.readAsDataURL(file);
       });
@@ -1180,7 +1209,6 @@
         if(previewContainer) previewContainer.classList.add('hidden');
         if(previewImg) previewImg.classList.add('hidden');
         if(previewVideo) previewVideo.classList.add('hidden');
-        if(audioSelectContainer) audioSelectContainer.classList.add('hidden');
         if(fileInput) fileInput.value = '';
       });
     }
@@ -1203,10 +1231,7 @@
     form.addEventListener('submit', e=>{
       e.preventDefault();
       const text=$('#newCaption').value.trim();
-      if(!text && !uploadedMediaUrl) return toast('Write something or select a video/photo first');
 
-      const isVideo = uploadedFileType && uploadedFileType.startsWith('video/');
-      const trackKey = $('#videoAudioTrackSelect')?.value || 'mass';
       const trackMap = {
         love1: '💕 Kadhale Kadhale • Flute Romance',
         love2: '💕 Nira Nira • Acoustic Sunset',
@@ -1215,37 +1240,98 @@
         love5: '💕 Unakkaga • Piano Romance',
         mass: '🔥 Tamil Mass BGM Drop',
         chill: '🎧 Chill Lo-Fi Beat',
-        original: '🎙️ Original Video Audio'
+        original: '🎙️ Original Video Sound'
       };
 
-      const newPost = {
-        id: Date.now(),
-        user: 1,
-        img: isVideo ? 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80' : (uploadedMediaUrl || 'assets/post-1.svg'),
-        isVideo: isVideo,
-        videoUrl: isVideo ? uploadedMediaUrl : '',
-        audioTrack: isVideo ? (trackMap[trackKey] || 'Original Audio') : '',
-        caption: text || (isVideo ? 'New BoundUp Love Reel 💕' : 'New BoundUp post'),
-        likes: 1,
-        comments: 0,
-        tag: isVideo ? 'Tamil Love Song' : 'User Upload'
-      };
+      if(currentActiveTab === 'story'){
+        // 📖 STORY PUBLISH
+        const storyBg = $('#storyBgSelect')?.value || 'linear-gradient(135deg, #ff6b00, #7c2cff)';
+        const storyMusicKey = $('#storyMusicSelect')?.value || 'love1';
 
-      const customPosts = store.json('custom_posts', []);
-      customPosts.unshift(newPost);
-      store.setJson('custom_posts', customPosts);
+        const newStory = {
+          id: 'custom_story_' + Date.now(),
+          isCustom: true,
+          name: 'Your Story',
+          username: 'itz_sam',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          storyImg: uploadedMediaUrl || 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80',
+          caption: text || 'Live Story 🌟',
+          audioTrack: trackMap[storyMusicKey] || 'Romantic Flute BGM',
+          bg: storyBg
+        };
 
-      renderFeed();
+        const customStories = store.json('custom_stories', []);
+        customStories.unshift(newStory);
+        store.setJson('custom_stories', customStories);
 
-      if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+        renderStories();
+        if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+        toast('📖 New Story Published to Top Stories Bar!');
 
+      } else if(currentActiveTab === 'reel'){
+        // 🎬 REEL PUBLISH
+        const trackKey = $('#videoAudioTrackSelect')?.value || 'mass';
+        const speed = $('#reelSpeedSelect')?.value || '1';
+
+        const newReel = {
+          id: Date.now(),
+          user: 1,
+          author: 'itz_sam',
+          title: text || 'New HD Reel 🔥',
+          img: uploadedMediaUrl || 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80',
+          isVideo: true,
+          videoUrl: uploadedMediaUrl || '',
+          audioTrack: trackMap[trackKey] || 'Tamil Mass BGM',
+          speed: speed,
+          caption: text || 'New HD Reel 🔥 #BoundUp',
+          likes: 1,
+          comments: 0
+        };
+
+        const customPosts = store.json('custom_posts', []);
+        customPosts.unshift(newReel);
+        store.setJson('custom_posts', customPosts);
+
+        renderFeed();
+        renderReels();
+        if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+        toast('🎬 HD Reel Published Successfully!');
+
+      } else {
+        // 📸 FEED POST PUBLISH
+        if(!text && !uploadedMediaUrl) return toast('Write a caption or attach media first');
+        const location = $('#postLocationInput')?.value || '';
+        const tags = $('#postTagInput')?.value || '';
+        const isVideo = uploadedFileType && uploadedFileType.startsWith('video/');
+
+        const newPost = {
+          id: Date.now(),
+          user: 1,
+          img: isVideo ? 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80' : (uploadedMediaUrl || 'assets/post-1.svg'),
+          isVideo: isVideo,
+          videoUrl: isVideo ? uploadedMediaUrl : '',
+          caption: (text || 'New BoundUp post') + (location ? ` • 📍 ${location}` : '') + (tags ? ` • 🏷️ ${tags}` : ''),
+          likes: 1,
+          comments: 0
+        };
+
+        const customPosts = store.json('custom_posts', []);
+        customPosts.unshift(newPost);
+        store.setJson('custom_posts', customPosts);
+
+        renderFeed();
+        if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+        toast('📸 Post Published to Feed!');
+      }
+
+      // Reset Form State
       $('#newCaption').value = '';
+      if($('#postLocationInput')) $('#postLocationInput').value = '';
+      if($('#postTagInput')) $('#postTagInput').value = '';
       uploadedMediaUrl = null;
       uploadedFileType = null;
       if(previewContainer) previewContainer.classList.add('hidden');
       if(fileInput) fileInput.value = '';
-
-      toast(isVideo ? '📹 Video Published to Feed!' : 'Post published!');
     });
   }
 
