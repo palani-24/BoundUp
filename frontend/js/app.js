@@ -49,16 +49,32 @@
     $$('.js-theme-toggle').forEach(btn=>btn.addEventListener('click',()=>{ const next=(document.documentElement.dataset.theme==='dark')?'light':'dark'; store.set('theme',next); initTheme(); toast(next==='dark'?'Dark mode on':'Light mode on'); }));
   }
 
-  function userById(id){ return D.users.find(u=>u.id===id) || D.users[0]; }
+  function userById(id){
+    const loggedInUser = store.get('user') || 'itz_sam';
+    if(id === 1 || id === 'me' || id === loggedInUser){
+      const p = getStoredProfile();
+      return {
+        id: 1,
+        name: p.name,
+        username: p.username,
+        avatar: p.avatar,
+        followers: p.followers || '12.4K'
+      };
+    }
+    const allReg = typeof getRegisteredUsers === 'function' ? getRegisteredUsers() : {};
+    if(typeof id === 'string' && allReg[id]) return allReg[id];
+    return D.users.find(u=>u.id===id) || { id: id, name: String(id), username: String(id), avatar: 'assets/avatar-1.svg' };
+  }
 
   /* Interactive Story Viewer Modal */
   let currentStoryIndex = 0;
-  let storyTimer = null;
 
   function renderStories(){
     const el=$('#stories'); if(!el) return;
     const customStories = store.json('custom_stories', []);
-    const allUsers = [...customStories, ...D.users];
+    const userProf = getStoredProfile();
+    const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
+    const allUsers = [myStory, ...customStories, ...D.users];
     el.innerHTML = allUsers.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer"><div class="story-ring ${u.isCustom ? 'live-badge-glow' : ''}"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username || u.name}</small></div>`).join('');
     $$('.js-story-open').forEach(btn => btn.addEventListener('click', () => {
       openStoryViewer(Number(btn.dataset.index));
@@ -81,7 +97,9 @@
     const modal = $('#storyViewerModal');
     if(!modal) return;
     const customStories = store.json('custom_stories', []);
-    const allUsers = [...customStories, ...D.users];
+    const userProf = getStoredProfile();
+    const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
+    const allUsers = [myStory, ...customStories, ...D.users];
     const user = allUsers[currentStoryIndex] || allUsers[0];
     const imgEl = $('#storyImg');
     const avatarEl = $('#storyAvatar');
@@ -96,44 +114,29 @@
   }
 
   function startStoryProgress(){
-    if(storyTimer) clearInterval(storyTimer);
-    const fillEl = $('#storyProgressFill');
-    if(!fillEl) return;
-    fillEl.style.width = '0%';
-    let pct = 0;
-    storyTimer = setInterval(()=>{
-      pct += 2;
-      fillEl.style.width = pct + '%';
-      if(pct >= 100){
-        clearInterval(storyTimer);
-        nextStory();
-      }
-    }, 80);
+    const fill = $('#storyProgressFill');
+    if(!fill) return;
+    fill.style.width = '0%';
+    setTimeout(()=> fill.style.width = '100%', 50);
   }
 
   function nextStory(){
-    if(currentStoryIndex < D.users.length - 1){
-      openStoryViewer(currentStoryIndex + 1);
-    } else {
-      closeStoryViewer();
-    }
+    if(currentStoryIndex < D.users.length - 1) openStoryViewer(currentStoryIndex + 1);
+    else closeStoryViewer();
   }
 
   function prevStory(){
-    if(currentStoryIndex > 0){
-      openStoryViewer(currentStoryIndex - 1);
-    } else {
-      closeStoryViewer();
-    }
+    if(currentStoryIndex > 0) openStoryViewer(currentStoryIndex - 1);
   }
 
   function closeStoryViewer(){
-    if(storyTimer) clearInterval(storyTimer);
     const modal = $('#storyViewerModal');
     if(modal) modal.classList.add('hidden');
   }
 
   function initStoryEvents(){
+    const modal = $('#storyViewerModal');
+    if(!modal) return;
     const closeBtn = $('#closeStoryBtn');
     const leftNav = $('#storyNavLeft');
     const rightNav = $('#storyNavRight');
@@ -145,7 +148,7 @@
     if(rightNav) rightNav.addEventListener('click', nextStory);
     if(sendBtn) sendBtn.addEventListener('click', ()=>{
       if(replyInput && replyInput.value.trim()){
-        toast(`Reply sent to @${D.users[currentStoryIndex]?.username || 'user'}`);
+        toast(`Reply sent to story`);
         replyInput.value = '';
         closeStoryViewer();
       }
@@ -154,23 +157,22 @@
 
   function postHtml(p){
     const u=userById(p.user), liked=store.json('liked',[]).includes(p.id), saved=store.json('saved',[]).includes(p.id);
-    const isVideo = p.isVideo || (p.img && p.img.endsWith('.mp4')) || p.videoUrl;
+    const isVideo = p.isVideo || (p.img && (p.img.endsWith('.mp4') || p.img.startsWith('data:video/'))) || p.videoUrl;
     const videoSrc = p.videoUrl || p.img;
     const audioTrackName = p.audioTrack || 'Original Audio • BoundUp Sound';
 
     let mediaTag = `<img class="post-img" src="${p.img}" alt="${p.tag}">`;
     if (isVideo) {
       mediaTag = `<div class="video-wrap">
-        <video class="post-img js-post-video" src="${videoSrc}" poster="${p.img}" loop muted playsinline></video>
-        <button class="video-sound-btn js-sound-toggle">🔇 <span class="sound-label">Muted</span></button>
+        <video class="post-img js-post-video" src="${videoSrc}" controls playsinline style="width:100%;max-height:520px;object-fit:cover;background:#000;border-radius:18px;"></video>
       </div>`;
     }
 
     return `<article class="post fade-up" data-post-id="${p.id}">
       <header class="post-head">
-        <a class="user-mini" href="profile.html?u=${u.id}">
+        <a class="user-mini" href="profile.html?user=${encodeURIComponent(u.username)}">
           <img class="avatar" src="${u.avatar}" alt="${u.name}">
-          <span><b>${u.username}</b><small>${p.tag} • 2h</small></span>
+          <span><b>${u.username}</b><small>${p.tag || 'BoundUp'} • 2h</small></span>
         </a>
         <button class="more">⋯</button>
       </header>
@@ -209,7 +211,7 @@
 
   function renderRightPanel(){
     const el=$('#rightPanel'); if(!el) return;
-    const mainUser = D.users[0];
+    const mainUser = getStoredProfile();
     el.innerHTML=`<div class="side-card glass">
       <div class="profile-mini">
         <img class="avatar" src="${mainUser.avatar}">
@@ -1340,9 +1342,20 @@
       };
 
       store.setJson('user_profile', updated);
+      store.set('user', updated.username);
+      store.set('chat_user', updated.username);
+
+      // Update registered users registry
+      const reg = getRegisteredUsers();
+      reg[updated.username] = Object.assign(reg[updated.username] || {}, updated);
+      store.setJson('registered_users', reg);
+
       modal.classList.add('hidden');
       renderProfile();
-      toast('🚀 Profile Updated Successfully!');
+      renderFeed();
+      renderRightPanel();
+      renderStories();
+      toast('🚀 Profile & Avatars Updated Everywhere!');
     });
   }
 
@@ -1358,6 +1371,10 @@
 
   function initCreatePost(){
     const form=$('#createPostForm'); if(!form) return;
+    const myProf = getStoredProfile();
+    const creatorAvatar = $('#create .user-mini .avatar') || $('#creatorUserAvatar');
+    if(creatorAvatar) creatorAvatar.src = myProf.avatar;
+
     const fileTrigger = $('#uploadFileTrigger');
     const fileInput = $('#mediaFileInput');
     const previewContainer = $('#mediaPreviewContainer');
