@@ -457,6 +457,7 @@
   font-weight: 900;
   margin: 0;
   background: linear-gradient(135deg, var(--brand), var(--neon-pink));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
