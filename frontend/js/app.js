@@ -35,11 +35,35 @@
     return `<aside class="app-rail"><a class="brand" href="home.html"><img src="assets/logo-icon.png" alt="BoundUp"><span>Bound<span>Up</span></span></a><nav class="nav-list">${items.map(([id,href,ico,label])=>`<a class="nav-item ${activeName===id?'active':''}" href="${href}"><b class="nav-ico">${ico}</b><span class="label" data-i18n="${label}">${t[label]||label}</span></a>`).join('')}</nav><div class="rail-bottom"><a class="create-btn" href="home.html#create"><span class="create-text" data-i18n="newPost">${t.newPost||'Create'}</span> +</a><button class="ghost-btn js-theme-toggle">◐ <span class="create-text js-theme-label"></span></button></div></aside>`;
   }
   function topMobile(){
-    return `<div class="top-mobile"><a class="brand" href="home.html"><img src="assets/logo-icon.png" alt="BoundUp"><span>Bound<span>Up</span></span></a><div><button class="ghost-btn js-theme-toggle">◐</button></div></div>`;
+    const myProf = typeof getStoredProfile === 'function' ? getStoredProfile() : { avatar: 'assets/avatar-1.svg', username: 'user' };
+    return `<div class="top-mobile">
+      <a class="brand" href="home.html">
+        <img src="assets/logo-icon.png" alt="BoundUp">
+        <span>Bound<span>Up</span></span>
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="ghost-btn js-theme-toggle" style="padding:6px 12px;font-size:15px;border-radius:999px;">◐</button>
+        <a href="profile.html" style="display:flex;align-items:center;" title="My Profile">
+          <img src="${myProf.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--brand);">
+        </a>
+      </div>
+    </div>`;
   }
   function bottomNav(){
-    const items=[['home','home.html','⌂'],['explore','explore.html','✦'],['reels','reels.html','▶'],['chat','chat.html','✉'],['profile','profile.html','◎']];
-    return `<nav class="bottom-nav">${items.map(([id,href,ico])=>`<a class="${page===id?'active':''}" href="${href}">${ico}</a>`).join('')}</nav>`;
+    const activeName = page==='index'?'home':page;
+    const items=[
+      ['home','home.html','⌂','Home'],
+      ['explore','explore.html','✦','Explore'],
+      ['reels','reels.html','▶','Reels'],
+      ['chat','chat.html','✉','Chat'],
+      ['profile','profile.html','◎','Profile']
+    ];
+    return `<nav class="bottom-nav">${items.map(([id,href,ico,label])=>`
+      <a class="${activeName===id?'active':''}" href="${href}" title="${label}">
+        <span style="font-size:22px;display:block;line-height:1;">${ico}</span>
+        <span style="font-size:10px;font-weight:800;margin-top:2px;display:block;opacity:0.85;">${label}</span>
+      </a>
+    `).join('')}</nav>`;
   }
   function installChrome(){
     const shell=$('.shell');
