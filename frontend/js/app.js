@@ -32,7 +32,7 @@
   function navHtml(){
     const items=[['home','home.html','⌂','home'],['explore','explore.html','✦','explore'],['reels','reels.html','▶','reels'],['chat','chat.html','✉','chat'],['favorites','favorites.html','♡','favorites'],['profile','profile.html','◎','profile'],['settings','settings.html','⚙','settings']];
     const activeName = page==='index'?'home':page;
-    return `<aside class="app-rail"><a class="brand" href="home.html"><img src="assets/logo-icon.png" alt="BoundUp"><span>Bound<span>Up</span></span></a><nav class="nav-list">${items.map(([id,href,ico,label])=>`<a class="nav-item ${activeName===id?'active':''}" href="${href}"><b class="nav-ico">${ico}</b><span class="label" data-i18n="${label}">${t[label]||label}</span></a>`).join('')}</nav><div class="rail-bottom"><a class="create-btn" href="home.html#create"><span class="create-text" data-i18n="newPost">${t.newPost||'Create'}</span> +</a><button class="ghost-btn js-theme-toggle">◐ <span class="create-text js-theme-label"></span></button></div></aside>`;
+    return `<aside class="app-rail"><a class="brand" href="home.html"><img src="assets/logo-icon.png" alt="BoundUp"><span>Bound<span>Up</span></span></a><nav class="nav-list">${items.map(([id,href,ico,label])=>`<a class="nav-item ${activeName===id?'active':''}" href="${href}"><b class="nav-ico">${ico}</b><span class="label" data-i18n="${label}">${t[label]||label}</span></a>`).join('')}</nav><div class="rail-bottom"><a class="create-btn" href="home.html#create"><span class="create-text" data-i18n="newPost">${t.newPost||'Create'}</span> +</a><button class="ghost-btn js-theme-toggle">◐ <span class="create-text js-theme-label"></span></button><button class="ghost-btn js-logout-btn" style="color:var(--danger);border-color:rgba(255,48,64,0.3);margin-top:4px;">🚪 <span class="create-text">Logout</span></button></div></aside>`;
   }
   function topMobile(){
     const myProf = typeof getStoredProfile === 'function' ? getStoredProfile() : { avatar: 'assets/avatar-1.svg', username: 'user' };
@@ -41,8 +41,9 @@
         <img src="assets/logo-icon.png" alt="BoundUp">
         <span>Bound<span>Up</span></span>
       </a>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <button class="ghost-btn js-theme-toggle" style="padding:6px 12px;font-size:15px;border-radius:999px;">◐</button>
+        <button class="ghost-btn js-logout-btn" style="padding:6px 10px;font-size:14px;border-radius:999px;color:#ff3040;border-color:rgba(255,48,64,0.3);" title="Logout">🚪 Logout</button>
         <a href="profile.html" style="display:flex;align-items:center;" title="My Profile">
           <img src="${myProf.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--brand);">
         </a>
@@ -71,6 +72,15 @@
     if(!$('.top-mobile') && !document.body.classList.contains('no-chrome')) document.body.insertAdjacentHTML('afterbegin', topMobile());
     if(!$('.bottom-nav') && !document.body.classList.contains('no-chrome')) document.body.insertAdjacentHTML('beforeend', bottomNav());
     $$('.js-theme-toggle').forEach(btn=>btn.addEventListener('click',()=>{ const next=(document.documentElement.dataset.theme==='dark')?'light':'dark'; store.set('theme',next); initTheme(); toast(next==='dark'?'Dark mode on':'Light mode on'); }));
+    $$('.js-logout-btn').forEach(btn => {
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        store.set('user', '');
+        store.set('chat_user', '');
+        toast('Logged out successfully 🚪');
+        setTimeout(() => location.href = 'welcome.html', 500);
+      });
+    });
   }
 
   function userById(id){
@@ -98,8 +108,14 @@
     const customStories = store.json('custom_stories', []);
     const userProf = getStoredProfile();
     const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
-    const allUsers = [myStory, ...customStories, ...D.users];
-    el.innerHTML = allUsers.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer"><div class="story-ring ${u.isCustom ? 'live-badge-glow' : ''}"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username || u.name}</small></div>`).join('');
+    const voiceRoomStory = { isVoiceRoom: true, name: 'Tamil BGM Room', username: 'voice_space', avatar: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' };
+    const allUsers = [myStory, voiceRoomStory, ...customStories, ...D.users];
+    el.innerHTML = allUsers.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer">
+      <div class="story-ring ${u.isCustom ? 'live-badge-glow' : u.isVoiceRoom ? 'live-badge-glow' : ''}">
+        <img src="${u.avatar}" alt="${u.name}">
+      </div>
+      <small>${u.isVoiceRoom ? '🎙️ Voice Room' : (u.username || u.name)}</small>
+    </div>`).join('');
     $$('.js-story-open').forEach(btn => btn.addEventListener('click', () => {
       openStoryViewer(Number(btn.dataset.index));
     }));
@@ -123,7 +139,8 @@
     const customStories = store.json('custom_stories', []);
     const userProf = getStoredProfile();
     const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
-    const allUsers = [myStory, ...customStories, ...D.users];
+    const voiceRoomStory = { isVoiceRoom: true, name: 'Tamil BGM Room', username: 'voice_space', avatar: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' };
+    const allUsers = [myStory, voiceRoomStory, ...customStories, ...D.users];
     const user = allUsers[currentStoryIndex] || allUsers[0];
     const imgEl = $('#storyImg');
     const avatarEl = $('#storyAvatar');
@@ -131,7 +148,7 @@
 
     if(imgEl) imgEl.src = user.storyImg || D.posts[currentStoryIndex % D.posts.length]?.img || user.avatar;
     if(avatarEl) avatarEl.src = user.avatar;
-    if(userEl) userEl.innerHTML = `<b>${user.username || user.name}</b> <small style="opacity:0.7">${user.name || ''}</small>`;
+    if(userEl) userEl.innerHTML = `<b>${user.username || user.name}</b> ${user.isVoiceRoom ? '🎙️ Voice Room' : ''} <small style="opacity:0.7">${user.name || ''}</small>`;
     
     modal.classList.remove('hidden');
     startStoryProgress();
@@ -196,7 +213,7 @@
       <header class="post-head">
         <a class="user-mini" href="profile.html?user=${encodeURIComponent(u.username)}">
           <img class="avatar" src="${u.avatar}" alt="${u.name}">
-          <span><b>${u.username}</b><small>${p.tag || 'BoundUp'} • 2h</small></span>
+          <span><b>${u.username} <span style="color:#1d9bf0;" title="Verified Creator">✔</span></b><small>${p.tag || 'BoundUp'} • 2h</small></span>
         </a>
         <button class="more">⋯</button>
       </header>
@@ -212,6 +229,15 @@
       <div class="post-body">
         <div class="likes"><span class="js-like-count">${(p.likes+(liked?1:0)).toLocaleString()}</span> likes</div>
         <div class="caption"><b>${u.username}</b> ${p.caption}</div>
+        
+        <!-- Quick Emoji Reaction Bar -->
+        <div class="quick-reaction-bar" style="display:flex;gap:6px;margin:8px 0;padding-top:6px;border-top:1px dashed var(--line);">
+          <button class="pill js-quick-react" data-emoji="❤️" style="font-size:12px;padding:4px 10px;cursor:pointer;">❤️ Love</button>
+          <button class="pill js-quick-react" data-emoji="🔥" style="font-size:12px;padding:4px 10px;cursor:pointer;">🔥 Mass</button>
+          <button class="pill js-quick-react" data-emoji="😂" style="font-size:12px;padding:4px 10px;cursor:pointer;">😂 LOL</button>
+          <button class="pill js-quick-react" data-emoji="🎧" style="font-size:12px;padding:4px 10px;cursor:pointer;">🎧 Vibe</button>
+        </div>
+
         <div class="audio-track-tag">
           <div class="sound-wave-icon"><span></span><span></span><span></span></div>
           <span>${audioTrackName}</span>
@@ -333,6 +359,16 @@
       else { liked.push(id); btn.textContent='♥'; btn.classList.add('liked'); n++; if(window.BoundUpSound) window.BoundUpSound.playLike(); }
       store.setJson('liked',liked); count.textContent=n.toLocaleString();
     }));
+
+    $$('.js-quick-react', root).forEach(btn => {
+      btn.addEventListener('click', ()=>{
+        const emoji = btn.dataset.emoji || '❤️';
+        toast(`Reacted ${emoji} to post! ✨`);
+        if(window.BoundUpSound) window.BoundUpSound.playLike();
+        btn.style.transform = 'scale(1.25)';
+        setTimeout(()=> btn.style.transform = 'scale(1)', 220);
+      });
+    });
 
     $$('.js-post-video', root).forEach((vid)=>{
       vid.addEventListener('click', (e)=>{
