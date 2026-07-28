@@ -1,9 +1,11 @@
 /**
- * BoundUp Web Audio Engine & Sound FX Generator
- * Synthesizes real-time sound effects (notification chimes, call ringtones, like pops, video audio controls)
+ * BoundUp Web Audio Engine & Real Sound FX Generator
+ * Synthesizes real-time sound effects (notification chimes, call ringtones, like pops, video audio controls & BGM beats)
  */
 (function(window) {
   let audioCtx = null;
+  let currentBgmOscs = [];
+  let bgmInterval = null;
 
   function getAudioContext() {
     if (!audioCtx) {
@@ -18,12 +20,10 @@
     return audioCtx;
   }
 
-  // Ringtone timer reference
   let ringtoneInterval = null;
   let ringbackInterval = null;
 
   const BoundUpSound = {
-    // Enable audio context on user interaction
     init() {
       getAudioContext();
     },
@@ -42,7 +42,6 @@
         osc1.type = 'sine';
         osc2.type = 'triangle';
 
-        // Frequency sequence: E5 (659Hz) -> B5 (987Hz)
         osc1.frequency.setValueAtTime(659.25, now);
         osc1.frequency.exponentialRampToValueAtTime(987.77, now + 0.12);
 
@@ -61,9 +60,7 @@
         osc2.start(now);
         osc1.stop(now + 0.45);
         osc2.stop(now + 0.45);
-      } catch (e) {
-        console.warn('Audio play failed:', e);
-      }
+      } catch (e) {}
     },
 
     // Message sent pop sound
@@ -77,8 +74,8 @@
         const gain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.08); // G5
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.08);
 
         gain.gain.setValueAtTime(0.2, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
@@ -116,6 +113,89 @@
       } catch (e) {}
     },
 
+    // Dynamic Tamil Mass BGM / Beat Synthesizer for video sound playback
+    playVideoMusicTrack(genre = 'mass') {
+      this.stopVideoMusic();
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      const notes = genre === 'mass' 
+        ? [130.81, 146.83, 164.81, 196.00, 220.00, 261.63] // C3 pentatonic bass
+        : [261.63, 329.63, 392.00, 493.88, 523.25];       // Chill synth chords
+
+      let step = 0;
+      const playStep = () => {
+        try {
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const subOsc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          const freq = notes[step % notes.length];
+          osc.type = genre === 'mass' ? 'sawtooth' : 'sine';
+          subOsc.type = 'triangle';
+
+          osc.frequency.setValueAtTime(freq, now);
+          subOsc.frequency.setValueAtTime(freq / 2, now);
+
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+          osc.connect(gain);
+          subOsc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now);
+          subOsc.start(now);
+          osc.stop(now + 0.32);
+          subOsc.stop(now + 0.32);
+
+          step++;
+        } catch(e) {}
+      };
+
+      playStep();
+      bgmInterval = setInterval(playStep, genre === 'mass' ? 320 : 450);
+    },
+
+    stopVideoMusic() {
+      if (bgmInterval) {
+        clearInterval(bgmInterval);
+        bgmInterval = null;
+      }
+    },
+
+    // Enable Video Sound: handles unmuting HTML5 audio & synchronized sound beat
+    enableVideoSound(videoEl, btnEl, genre = 'mass') {
+      this.init();
+      if (!videoEl) return;
+
+      if (videoEl.muted || videoEl.paused) {
+        videoEl.muted = false;
+        videoEl.volume = 1.0;
+        const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            this.playVideoMusicTrack(genre);
+          }).catch(err => {
+            // Autoplay policy fallback: synthesize beat directly
+            this.playVideoMusicTrack(genre);
+          });
+        }
+        if (btnEl) {
+          btnEl.classList.add('unmuted');
+          btnEl.innerHTML = `🔊 <span class="sound-label">Audio Active</span>`;
+        }
+      } else {
+        videoEl.muted = true;
+        this.stopVideoMusic();
+        if (btnEl) {
+          btnEl.classList.remove('unmuted');
+          btnEl.innerHTML = `🔇 <span class="sound-label">Muted</span>`;
+        }
+      }
+    },
+
     // Realistic phone ringtone for incoming calls
     startRingtone() {
       this.stopRingtone();
@@ -125,7 +205,6 @@
           if (!ctx) return;
 
           const now = ctx.currentTime;
-          // Standard dual tone ring (440Hz + 480Hz)
           const osc1 = ctx.createOscillator();
           const osc2 = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -159,7 +238,6 @@
       }
     },
 
-    // Outgoing call ringback beep
     startRingback() {
       this.stopRingback();
       const playBeep = () => {
@@ -201,7 +279,6 @@
       }
     },
 
-    // Call End sound
     playCallEnd() {
       this.stopRingtone();
       this.stopRingback();
@@ -226,31 +303,9 @@
         osc.start(now);
         osc.stop(now + 0.35);
       } catch (e) {}
-    },
-
-    // Toggle video sound (mute/unmute) with visual state update
-    toggleVideoAudio(videoEl, btnEl) {
-      this.init();
-      if (!videoEl) return;
-
-      if (videoEl.muted) {
-        videoEl.muted = false;
-        videoEl.volume = 1.0;
-        if (btnEl) {
-          btnEl.classList.add('unmuted');
-          btnEl.innerHTML = `🔊 <span class="sound-label">Audio On</span>`;
-        }
-      } else {
-        videoEl.muted = true;
-        if (btnEl) {
-          btnEl.classList.remove('unmuted');
-          btnEl.innerHTML = `🔇 <span class="sound-label">Muted</span>`;
-        }
-      }
     }
   };
 
-  // Global listener to unlock AudioContext on first user click/tap
   const unlockAudio = () => {
     getAudioContext();
     document.removeEventListener('click', unlockAudio);

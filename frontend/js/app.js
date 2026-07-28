@@ -243,7 +243,10 @@
 
   function renderReels(){
     const el=$('#reelsGrid'); if(!el) return;
-    el.innerHTML=D.reels.map(r=>`<article class="reel-card">
+    const customReels = store.json('custom_reels', []);
+    const allReels = [...customReels, ...D.reels];
+
+    el.innerHTML=allReels.map(r=>`<article class="reel-card">
       <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
       <button class="video-sound-btn js-reel-sound-toggle" style="top:14px;bottom:auto;right:14px;">🔇</button>
       <div class="reel-overlay">
@@ -252,7 +255,7 @@
           <div class="sound-wave-icon"><span style="background:white"></span><span style="background:white"></span><span style="background:white"></span></div>
           <span>${r.audioTrack || 'Original Audio'}</span>
         </div>
-        <div>${r.views} views</div>
+        <div>${r.views} views • @${r.author || 'itz_sam'}</div>
         <div class="icon-row" style="margin-top:8px;">
           <button class="icon-btn js-reel-like">♡</button>
           <button class="icon-btn js-share">↗</button>
@@ -264,8 +267,7 @@
       btn.addEventListener('click',()=>{
         const video = btn.previousElementSibling;
         if(video && window.BoundUpSound){
-          if(video.paused) video.play();
-          window.BoundUpSound.toggleVideoAudio(video, btn);
+          window.BoundUpSound.enableVideoSound(video, btn, 'mass');
         }
       });
     });
@@ -693,6 +695,7 @@
 
   /* File Upload & Create Post Integration */
   let uploadedMediaUrl = null;
+  let uploadedFileType = null;
 
   function initCreatePost(){
     const form=$('#createPostForm'); if(!form) return;
@@ -700,6 +703,8 @@
     const fileInput = $('#mediaFileInput');
     const previewContainer = $('#mediaPreviewContainer');
     const previewImg = $('#mediaPreviewImg');
+    const previewVideo = $('#mediaPreviewVideo');
+    const audioSelectContainer = $('#audioSelectContainer');
     const removeMediaBtn = $('#removeMediaBtn');
     const aiCaptionBtn = $('#aiCaptionBtn');
 
@@ -708,42 +713,46 @@
     }
 
     if(fileInput){
-      fileInput.addEventListener('change', async (e)=>{
+      fileInput.addEventListener('change', (e)=>{
         const file = e.target.files[0];
         if(!file) return;
 
-        try {
-          const formData = new FormData();
-          formData.append('media', file);
-          const res = await fetch('/api/upload/file', { method: 'POST', body: formData });
-          if(res.ok){
-            const data = await res.json();
-            uploadedMediaUrl = data.url;
-          }
-        } catch(err){
-          console.log('Backend upload offline, using local FileReader');
-        }
+        uploadedFileType = file.type;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          uploadedMediaUrl = evt.target.result;
+          const isVid = file.type.startsWith('video/');
 
-        if(!uploadedMediaUrl){
-          const reader = new FileReader();
-          reader.onload = (evt) => {
-            uploadedMediaUrl = evt.target.result;
-            if(previewImg) previewImg.src = uploadedMediaUrl;
-            if(previewContainer) previewContainer.classList.remove('hidden');
-          };
-          reader.readAsDataURL(file);
-        } else {
-          if(previewImg) previewImg.src = uploadedMediaUrl;
+          if(isVid){
+            if(previewImg) previewImg.classList.add('hidden');
+            if(previewVideo){
+              previewVideo.src = uploadedMediaUrl;
+              previewVideo.classList.remove('hidden');
+            }
+            if(audioSelectContainer) audioSelectContainer.classList.remove('hidden');
+          } else {
+            if(previewVideo) previewVideo.classList.add('hidden');
+            if(previewImg){
+              previewImg.src = uploadedMediaUrl;
+              previewImg.classList.remove('hidden');
+            }
+            if(audioSelectContainer) audioSelectContainer.classList.add('hidden');
+          }
           if(previewContainer) previewContainer.classList.remove('hidden');
-        }
-        toast('Media loaded for post');
+          toast(isVid ? '🎬 Video loaded! Sound track ready' : '📷 Photo loaded');
+        };
+        reader.readAsDataURL(file);
       });
     }
 
     if(removeMediaBtn){
       removeMediaBtn.addEventListener('click', ()=>{
         uploadedMediaUrl = null;
+        uploadedFileType = null;
         if(previewContainer) previewContainer.classList.add('hidden');
+        if(previewImg) previewImg.classList.add('hidden');
+        if(previewVideo) previewVideo.classList.add('hidden');
+        if(audioSelectContainer) audioSelectContainer.classList.add('hidden');
         if(fileInput) fileInput.value = '';
       });
     }
@@ -753,7 +762,7 @@
         "✨ Tamil BGM Vibe • BoundUp Moments 🧡 #BoundUp #VibeCheck",
         "🔥 Living the best aesthetic life on BoundUp! 🚀",
         "🎧 Mood: Repeat mode on. What's your favorite song today?",
-        "🌟 Creating memories, one post at a time. #BoundUpLife"
+        "🌟 Creating memories, one video at a time. #BoundUpReels"
       ];
       aiCaptionBtn.addEventListener('click', ()=>{
         const randomCap = captions[Math.floor(Math.random() * captions.length)];
@@ -766,16 +775,23 @@
     form.addEventListener('submit', e=>{
       e.preventDefault();
       const text=$('#newCaption').value.trim();
-      if(!text && !uploadedMediaUrl) return toast('Write something or add media first');
+      if(!text && !uploadedMediaUrl) return toast('Write something or select a video/photo first');
+
+      const isVideo = uploadedFileType && uploadedFileType.startsWith('video/');
+      const trackKey = $('#videoAudioTrackSelect')?.value || 'mass';
+      const trackMap = { mass: '🔥 Tamil Mass BGM Drop', chill: '🎧 Chill Lo-Fi Beat', original: '🎙️ Original Video Audio' };
 
       const newPost = {
         id: Date.now(),
         user: 1,
-        img: uploadedMediaUrl || 'assets/post-1.svg',
-        caption: text || 'New BoundUp post',
+        img: isVideo ? 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80' : (uploadedMediaUrl || 'assets/post-1.svg'),
+        isVideo: isVideo,
+        videoUrl: isVideo ? uploadedMediaUrl : '',
+        audioTrack: isVideo ? (trackMap[trackKey] || 'Original Audio') : '',
+        caption: text || (isVideo ? 'New BoundUp Video Reel 🔥' : 'New BoundUp post'),
         likes: 1,
         comments: 0,
-        tag: 'User Upload'
+        tag: isVideo ? 'Video Reel' : 'User Upload'
       };
 
       const customPosts = store.json('custom_posts', []);
@@ -784,13 +800,87 @@
 
       renderFeed();
 
+      if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+
       $('#newCaption').value = '';
       uploadedMediaUrl = null;
+      uploadedFileType = null;
       if(previewContainer) previewContainer.classList.add('hidden');
       if(fileInput) fileInput.value = '';
 
-      toast('Post published successfully!');
+      toast(isVideo ? '📹 Video Published to Feed!' : 'Post published!');
     });
+  }
+
+  /* Interactive Upload Reel Video Modal System */
+  function initReelsUploadModal(){
+    const openBtn = $('#openReelModalBtn');
+    const modal = $('#uploadReelModal');
+    const closeBtn = $('#closeReelModalBtn');
+    const dropArea = $('#reelDropArea');
+    const fileInput = $('#reelFileInput');
+    const videoPreview = $('#reelPreviewVideo');
+    const placeholderText = $('#reelPlaceholderText');
+    const titleInput = $('#reelTitleInput');
+    const audioSelect = $('#reelAudioSelect');
+    const submitBtn = $('#submitReelBtn');
+
+    if(!openBtn || !modal) return;
+
+    openBtn.addEventListener('click', ()=> modal.classList.remove('hidden'));
+    if(closeBtn) closeBtn.addEventListener('click', ()=> modal.classList.add('hidden'));
+
+    if(dropArea && fileInput){
+      dropArea.addEventListener('click', ()=> fileInput.click());
+      fileInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const videoDataUrl = evt.target.result;
+          if(videoPreview){
+            videoPreview.src = videoDataUrl;
+            videoPreview.classList.remove('hidden');
+          }
+          if(placeholderText) placeholderText.classList.add('hidden');
+          toast('Video ready for Reel!');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if(submitBtn){
+      submitBtn.addEventListener('click', ()=>{
+        const title = titleInput ? titleInput.value.trim() : '';
+        const videoSrc = videoPreview && videoPreview.src ? videoPreview.src : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+        const trackKey = audioSelect ? audioSelect.value : 'mass';
+        const trackNameMap = { mass: '🔥 Tamil Mass BGM Drop', chill: '🎧 Chill Synthwave Beat', gaming: '🎮 Gamer Bass' };
+
+        const newReel = {
+          id: Date.now(),
+          img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+          videoUrl: videoSrc,
+          title: title || 'New Reel Drop 🔥',
+          author: 'itz_sam',
+          audioTrack: trackNameMap[trackKey] || 'Original Audio',
+          views: '1'
+        };
+
+        const customReels = store.json('custom_reels', []);
+        customReels.unshift(newReel);
+        store.setJson('custom_reels', customReels);
+
+        renderReels();
+
+        if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
+        modal.classList.add('hidden');
+        if(titleInput) titleInput.value = '';
+        if(videoPreview) { videoPreview.src = ''; videoPreview.classList.add('hidden'); }
+        if(placeholderText) placeholderText.classList.remove('hidden');
+
+        toast('🚀 Reel Video Published!');
+      });
+    }
   }
 
   /* WebRTC Video Call Controller */
@@ -862,7 +952,7 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initWebRTCCalls();
+    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initWebRTCCalls();
     document.body.classList.add('ready');
   });
 })();

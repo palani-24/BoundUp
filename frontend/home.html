@@ -24,25 +24,36 @@
               <form id="createPostForm">
                 <div class="post-head">
                   <div class="user-mini">
-                    <img class="avatar" src="assets/avatar-1.svg" alt="Avatar">
-                    <span><b>Create new post</b><small>AI caption & media upload ready</small></span>
+                    <img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Avatar">
+                    <span><b>Create Post / Video Reel</b><small>Upload photos or MP4 videos with sound</small></span>
                   </div>
                 </div>
                 <div class="post-body">
-                  <textarea id="newCaption" rows="3" placeholder="What's happening on BoundUp?" style="width:100%;border:0;background:var(--panel2);border-radius:18px;padding:14px;color:var(--text);outline:0;resize:vertical"></textarea>
+                  <textarea id="newCaption" rows="3" placeholder="What's happening on BoundUp? Write a caption..." style="width:100%;border:0;background:var(--panel2);border-radius:18px;padding:14px;color:var(--text);outline:0;resize:vertical"></textarea>
                   
                   <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display:none">
-                  <div id="mediaPreviewContainer" class="media-preview-box hidden">
-                    <img id="mediaPreviewImg" src="" alt="Upload Preview">
+                  
+                  <div id="mediaPreviewContainer" class="media-preview-box hidden" style="width:100%;margin-top:12px;">
+                    <img id="mediaPreviewImg" src="" alt="Upload Preview" class="hidden">
+                    <video id="mediaPreviewVideo" controls src="" class="hidden" style="width:100%;max-height:240px;border-radius:16px;object-fit:cover;"></video>
                     <button type="button" class="remove-media" id="removeMediaBtn">✕</button>
                   </div>
+
+                  <div id="audioSelectContainer" class="sound-select-row hidden">
+                    <span style="font-size:13px;font-weight:800">🎵 Audio Track:</span>
+                    <select id="videoAudioTrackSelect">
+                      <option value="mass">🔥 Tamil Mass BGM Drop</option>
+                      <option value="chill">🎧 Chill Lo-Fi Beat</option>
+                      <option value="original">🎙️ Original Video Audio</option>
+                    </select>
+                  </div>
                   
-                  <div class="btn-row" style="align-items:center;justify-content:space-between">
-                    <div style="display:flex;gap:8px">
-                      <button type="button" class="ghost-btn" id="uploadFileTrigger">📷 Add Media</button>
+                  <div class="btn-row" style="align-items:center;justify-content:space-between;margin-top:12px;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                      <button type="button" class="ghost-btn" id="uploadFileTrigger">🎬 Add Video / Photo</button>
                       <button type="button" class="ghost-btn" id="aiCaptionBtn">✨ AI Caption</button>
                     </div>
-                    <button class="primary-btn">Post</button>
+                    <button class="primary-btn" id="createPostSubmitBtn">Publish Post</button>
                   </div>
                 </div>
               </form>

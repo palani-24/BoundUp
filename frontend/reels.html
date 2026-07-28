@@ -1,1 +1,70 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reels | BoundUp</title><meta name="theme-color" content="#ff6b00"><link rel="manifest" href="manifest.json"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="css/style.css"><script defer src="js/soundEngine.js"></script><script defer src="js/data.js"></script><script defer src="js/app.js"></script></head><body class=""><div class="bg-orbs"></div><div class="shell"><main class="main"><section class="page fade-up"><div class="page-title"><div><h1>Reels</h1><p>Vertical short videos with music, AI recommendations and creator analytics.</p></div><button class="primary-btn" onclick="boundToast('Reel upload UI ready')">Upload Reel</button></div><div id="reelsGrid" class="reels-grid"></div></section></main></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reels & Videos | BoundUp</title>
+  <meta name="theme-color" content="#ff6b00">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div class="shell">
+    <main class="main">
+      <section class="page fade-up">
+        <div class="page-title">
+          <div>
+            <h1>Reels</h1>
+            <p>Vertical short videos with music, sound audio effects, and AI recommendations.</p>
+          </div>
+          <button class="primary-btn" id="openReelModalBtn">📹 Upload Reel Video</button>
+        </div>
+        <div id="reelsGrid" class="reels-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Interactive Upload Reel Video Modal -->
+  <div id="uploadReelModal" class="upload-modal-overlay hidden">
+    <div class="upload-card-dialog">
+      <h2>📹 Upload New Reel Video</h2>
+      <p class="muted">Select an MP4 video from your device to publish to BoundUp Reels.</p>
+      
+      <input type="file" id="reelFileInput" accept="video/*" style="display:none">
+      
+      <div class="video-preview-holder" id="reelDropArea">
+        <video id="reelPreviewVideo" controls src="" class="hidden"></video>
+        <div id="reelPlaceholderText" style="text-align:center;padding:20px;color:var(--muted)">
+          <p style="font-size:32px;margin:0">🎬</p>
+          <b>Click to select video file</b>
+          <small style="display:block;margin-top:4px">MP4, WebM up to 60s</small>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="font-weight:800;font-size:13px">Reel Title / Caption</label>
+        <input type="text" id="reelTitleInput" placeholder="e.g. Tamil Mass BGM Drop #Reels" style="border:1px solid var(--line);background:var(--panel2);padding:12px 14px;border-radius:14px;color:var(--text);outline:0">
+      </div>
+
+      <div class="sound-select-row">
+        <span style="font-weight:800;font-size:13px">🎵 Audio Beat:</span>
+        <select id="reelAudioSelect">
+          <option value="mass">🔥 Tamil Mass BGM Drop</option>
+          <option value="chill">🎧 Chill Synthwave Beat</option>
+          <option value="gaming">🎮 Gamer Surround Bass</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+        <button type="button" class="ghost-btn" id="closeReelModalBtn">Cancel</button>
+        <button type="button" class="primary-btn" id="submitReelBtn">Publish Reel 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/soundEngine.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
