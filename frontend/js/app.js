@@ -359,7 +359,53 @@
   function renderExplore(){
     const grid=$('#exploreGrid'); if(!grid) return;
     grid.innerHTML=[...D.posts,...D.posts].map((p,i)=>`<a class="grid-card" data-info="♡ ${(p.likes+i*20).toLocaleString()} • 💬 ${p.comments+i}" href="home.html#post-${p.id}"><img src="${p.img}" alt="${p.tag}"></a>`).join('');
-    const search=$('#globalSearch'); if(search) search.addEventListener('input',()=>{ const q=search.value.toLowerCase(); $$('.grid-card',grid).forEach((c,i)=>{ const p=D.posts[i%D.posts.length]; c.style.display=(p.caption.toLowerCase().includes(q)||p.tag.toLowerCase().includes(q))?'block':'none'; }); });
+    
+    const search=$('#globalSearch');
+    const userResultsContainer = $('#userSearchResults');
+
+    if(search){
+      search.addEventListener('input',()=>{
+        const q=search.value.toLowerCase().trim().replace('@','');
+        
+        // Search Registered Users by Username / ID
+        if(userResultsContainer){
+          if(q.length >= 1){
+            const allReg = getRegisteredUsers();
+            const matchedUsers = Object.values(allReg).filter(u => 
+              (u.username && u.username.toLowerCase().includes(q)) || 
+              (u.name && u.name.toLowerCase().includes(q))
+            );
+
+            if(matchedUsers.length > 0){
+              userResultsContainer.classList.remove('hidden');
+              userResultsContainer.innerHTML = matchedUsers.map(u => `
+                <div class="feature-card glass" style="display:flex;align-items:center;gap:14px;padding:14px;">
+                  <img class="avatar" src="${u.avatar}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--brand)">
+                  <div style="flex:1;min-width:0;">
+                    <b style="display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</b>
+                    <small style="color:var(--muted);display:block">@${u.username} • ${u.followers || '0'} followers</small>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <a class="ghost-btn" href="profile.html?user=${encodeURIComponent(u.username)}" style="padding:6px 12px;font-size:12px">Profile</a>
+                    <a class="primary-btn" href="chat.html?target=${encodeURIComponent(u.username)}" style="padding:6px 12px;font-size:12px">💬 Message</a>
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              userResultsContainer.classList.add('hidden');
+            }
+          } else {
+            userResultsContainer.classList.add('hidden');
+          }
+        }
+
+        // Filter Post Grid
+        $$('.grid-card',grid).forEach((c,i)=>{
+          const p=D.posts[i%D.posts.length];
+          c.style.display=(p.caption.toLowerCase().includes(q)||p.tag.toLowerCase().includes(q))?'block':'none';
+        });
+      });
+    }
   }
 
   /* NATIVE PUSH NOTIFICATION CONTROLLER */
@@ -563,18 +609,26 @@
     }
 
     let activeTab = 'primary'; // 'primary' | 'requests'
-    let currentUser = store.get('chat_user') || 'itz_sam';
-    let targetContactId = 'riya_music';
-    let socket = null;
+    let currentUser = store.get('chat_user') || store.get('user') || 'itz_sam';
+    const allReg = getRegisteredUsers();
 
-    // Contact Metadata registry (Real creators only)
-    const allUsers = {
-      'itz_sam': { handle: 'itz_sam', name: 'Sam Bound', avatar: 'assets/avatar-1.svg', status: 'Online (You)', accepted: true },
-      'riya_music': { handle: 'riya_music', name: 'Riya Music', avatar: 'assets/avatar-2.svg', status: 'Online • Tamil BGM Creator', accepted: true },
-      'arun_gaming': { handle: 'arun_gaming', name: 'Arun Gaming', avatar: 'assets/avatar-3.svg', status: 'Online • Streamer', accepted: true },
-      'nila_voice': { handle: 'nila_voice', name: 'Nila Voice', avatar: 'assets/avatar-4.svg', status: 'Active 5m ago', accepted: false },
-      'vicky_creator': { handle: 'vicky_creator', name: 'Vicky Creator', avatar: 'assets/avatar-5.svg', status: 'Online', accepted: false }
-    };
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetParam = urlParams.get('target');
+
+    let targetContactId = (targetParam && allReg[targetParam]) ? targetParam : 'riya.vibe';
+
+    // Contact Metadata registry from Registered Users
+    const allUsers = {};
+    Object.keys(allReg).forEach(k => {
+      const u = allReg[k];
+      allUsers[k] = {
+        handle: u.username,
+        name: u.name,
+        avatar: u.avatar,
+        status: u.username === currentUser ? 'Online (You)' : 'Online',
+        accepted: true
+      };
+    });
 
     // User Pair Room Helper
     function getRoomId(u1, u2){
@@ -584,29 +638,34 @@
 
     // Default message threads
     const defaultThreads = {
-      [getRoomId('itz_sam', 'ai')]: [
-        { sender: 'ai', text: '👋 Hi Sam! I am BoundUp AI. Ask me for captions, Tamil translation, or reel summaries!', time: '12:00 PM' }
-      ],
-      [getRoomId('itz_sam', 'riya_music')]: [
-        { sender: 'riya_music', text: 'Hey Sam! Did you hear the new Tamil BGM edit on BoundUp?', time: '11:30 AM' },
+      [getRoomId('itz_sam', 'riya.vibe')]: [
+        { sender: 'riya.vibe', text: 'Hey Sam! Did you hear the new Tamil BGM edit on BoundUp?', time: '11:30 AM' },
         { sender: 'itz_sam', text: 'Yes! The bass drop was fire 🔥', time: '11:32 AM' }
       ],
       [getRoomId('itz_sam', 'nila_voice')]: [
         { sender: 'nila_voice', text: 'Hey Sam! I sent you a voice request for the upcoming project.', time: '10:00 AM' }
       ],
-      [getRoomId('riya_music', 'arun_gaming')]: [
+      [getRoomId('riya.vibe', 'arun_gaming')]: [
         { sender: 'arun_gaming', text: 'Riya! Can I use your BGM track for my live gaming stream?', time: '09:00 AM' }
       ]
     };
 
     // Accepted contacts registry per user
     let acceptedMap = store.json('chat_accepted_map', {
-      'itz_sam': ['ai', 'riya_music', 'arun_gaming'],
-      'riya_music': ['itz_sam', 'arun_gaming'],
-      'arun_gaming': ['itz_sam', 'riya_music'],
+      'itz_sam': ['riya.vibe', 'arun_gaming'],
+      'riya.vibe': ['itz_sam', 'arun_gaming'],
+      'arun_gaming': ['itz_sam', 'riya.vibe'],
       'nila_voice': [],
       'vicky_creator': []
     });
+
+    if(targetParam){
+      if(!acceptedMap[currentUser]) acceptedMap[currentUser] = [];
+      if(!acceptedMap[currentUser].includes(targetParam)){
+        acceptedMap[currentUser].push(targetParam);
+        store.setJson('chat_accepted_map', acceptedMap);
+      }
+    }
 
     let chatStorage = store.json('chat_room_storage', defaultThreads);
 
@@ -935,9 +994,53 @@
     renderThread();
   }
 
+  function getRegisteredUsers(){
+    const defaultUsers = {
+      'itz_sam': { name: 'Sam Bound', username: 'itz_sam', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', bio: 'Dreamer • Gamer • Creator 🚀', category: '🚀 Creator', followers: '12.4K', following: '256', anthem: '💕 Kadhale Kadhale • Flute Romance', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3' },
+      'riya.vibe': { name: 'Riya Music', username: 'riya.vibe', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80', bio: 'Music stories & Tamil BGM drops daily 🎵', category: '🎵 Music & Songs', followers: '48.2K', following: '120', anthem: '💕 Nira Nira • Acoustic Sunset', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70512.mp3?filename=acoustic-guitar-love-song-18945.mp3' },
+      'arun_gaming': { name: 'Arun Gaming', username: 'arun_gaming', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80', bio: 'Live streaming & esports tournament 🎮', category: '🎮 Gaming Aura', followers: '32.1K', following: '88', anthem: '🔥 Tamil Mass BGM Drop', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8b74a3f12.mp3?filename=mass-bass-drop-action-19823.mp3' },
+      'nila_voice': { name: 'Nila Voice', username: 'nila_voice', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80', bio: 'Singer & voiceover artist 🎙️', category: '🎙️ Voice & Songs', followers: '21.5K', following: '150', anthem: '💕 Kannazhaga • Soft Violin', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=violin-romantic-cinematic-11023.mp3' },
+      'vicky_creator': { name: 'Vicky Creator', username: 'vicky_creator', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', bio: 'VFX Motion & Cinematic Edits 🎬', category: '🎬 VFX & Motion', followers: '15.8K', following: '95', anthem: '🎧 Chill Lo-Fi Beat', anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db65912a77.mp3?filename=chill-lofi-song-110321.mp3' }
+    };
+    return Object.assign(defaultUsers, store.json('registered_users', {}));
+  }
+
   function initAuth(){
     const form=$('#authForm'); if(!form) return;
-    form.addEventListener('submit',e=>{ e.preventDefault(); const email=$('#email')?.value.trim(); const pass=$('#password')?.value.trim(); const err=$('#formError'); if(!email || !pass){ if(err) err.textContent='Please enter email/username and password.'; return; } if(pass.length<4){ if(err) err.textContent='Password must be at least 4 characters.'; return; } store.set('user',email); toast('Welcome to BoundUp'); setTimeout(()=>location.href='home.html',600); });
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const email=$('#email')?.value.trim();
+      const pass=$('#password')?.value.trim();
+      const err=$('#formError');
+      if(!email || !pass){ if(err) err.textContent='Please enter email/username and password.'; return; }
+      if(pass.length<4){ if(err) err.textContent='Password must be at least 4 characters.'; return; }
+
+      const cleanUser = email.replace('@boundup.app','').replace('@','').trim();
+      store.set('user', cleanUser);
+      store.set('chat_user', cleanUser);
+
+      // Register new user profile if not present
+      const registered = store.json('registered_users', {});
+      if(!registered[cleanUser]){
+        registered[cleanUser] = {
+          name: cleanUser.charAt(0).toUpperCase() + cleanUser.slice(1),
+          username: cleanUser,
+          email: email,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+          bio: 'BoundUp Creator 🚀',
+          category: '🚀 Creator',
+          followers: '0',
+          following: '0',
+          anthem: '💕 Kadhale Kadhale • Flute Romance',
+          anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3'
+        };
+        store.setJson('registered_users', registered);
+      }
+
+      toast(`Welcome @${cleanUser} to BoundUp!`);
+      setTimeout(()=>location.href='home.html', 600);
+    });
     $$('.js-password-toggle').forEach(btn=>btn.addEventListener('click',()=>{ const p=$('#password'); if(p){p.type=p.type==='password'?'text':'password';btn.textContent=p.type==='password'?'Show':'Hide';} }));
     $$('.js-guest').forEach(btn=>btn.addEventListener('click',()=>{store.set('user','guest');location.href='home.html'}));
   }
@@ -974,7 +1077,31 @@
 
   function renderProfile(){
     const grid = $('#profileGrid');
-    const profile = getStoredProfile();
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedUser = urlParams.get('user');
+    const loggedInUser = store.get('user') || 'itz_sam';
+    const targetUsername = requestedUser || loggedInUser;
+
+    const allReg = getRegisteredUsers();
+    let profile = allReg[targetUsername];
+    if(!profile){
+      profile = (targetUsername === loggedInUser) ? getStoredProfile() : {
+        name: targetUsername.charAt(0).toUpperCase() + targetUsername.slice(1),
+        username: targetUsername,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+        bio: 'BoundUp Creator 🚀',
+        category: '🚀 Creator',
+        followers: '0',
+        following: '0',
+        anthem: '💕 Kadhale Kadhale • Flute Romance',
+        anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3'
+      };
+    } else if(targetUsername === loggedInUser){
+      profile = Object.assign(profile, store.json('user_profile', {}));
+    }
+
+    const isOwnProfile = (targetUsername === loggedInUser);
 
     const avatarImg = $('#profileAvatarImg');
     const nameEl = $('#profileNameDisplay');
@@ -988,7 +1115,40 @@
     if(handleBioEl) handleBioEl.textContent = `@${profile.username} • ${profile.bio}`;
     if(catTextEl) catTextEl.textContent = profile.category || '🚀 Creator';
     if(coverBg) coverBg.style.backgroundImage = `url('${profile.cover}')`;
-    if(anthemTitleEl) anthemTitleEl.textContent = `🎵 Profile Anthem: ${profile.anthem}`;
+    if(anthemTitleEl) anthemTitleEl.textContent = `🎵 Profile Anthem: ${profile.anthem || '💕 Kadhale Kadhale • Flute Romance'}`;
+
+    // Header buttons (Edit vs Follow & Message)
+    const editBtn = $('#openEditProfileBtn');
+    const followBtn = $('#profileFollowBtn');
+    const messageBtn = $('#profileMessageBtn');
+
+    if(isOwnProfile){
+      if(editBtn) editBtn.style.display = 'inline-flex';
+      if(followBtn) followBtn.style.display = 'none';
+      if(messageBtn) messageBtn.style.display = 'none';
+    } else {
+      if(editBtn) editBtn.style.display = 'none';
+      if(followBtn){
+        followBtn.style.display = 'inline-flex';
+        followBtn.addEventListener('click', ()=>{
+          const isFollowing = followBtn.classList.contains('following');
+          if(isFollowing){
+            followBtn.classList.remove('following');
+            followBtn.textContent = 'Follow';
+            toast(`Unfollowed @${profile.username}`);
+          } else {
+            followBtn.classList.add('following');
+            followBtn.textContent = 'Following ✓';
+            toast(`Following @${profile.username}! ✨`);
+            if(window.BoundUpSound) window.BoundUpSound.playLike();
+          }
+        });
+      }
+      if(messageBtn){
+        messageBtn.style.display = 'inline-flex';
+        messageBtn.href = `chat.html?target=${encodeURIComponent(profile.username)}`;
+      }
+    }
 
     // Profile Anthem Song Player
     const anthemBtn = $('#playProfileAnthemBtn');
