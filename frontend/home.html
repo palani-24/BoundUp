@@ -92,10 +92,31 @@
       <div class="story-nav-right" id="storyNavRight"></div>
       <img class="story-media-view" id="storyImg" src="" alt="Story View">
       <div class="story-footer-input">
-        <input type="text" id="storyReplyInput" placeholder="Send reply to story...">
-        <button type="button" id="sendStoryReplyBtn">Send</button>
+    </div>
+  </div>
+
+  <!-- Full-Screen Interactive Video & Real Song Player Modal -->
+  <div id="videoPlayerModal" class="video-modal-overlay hidden">
+    <div class="video-modal-card">
+      <button type="button" class="video-modal-close" id="closeVideoModalBtn">✕</button>
+      <video id="modalVideoPlayer" class="video-modal-player" src="" loop autoplay playsinline></video>
+      <div class="video-modal-info">
+        <div class="video-modal-author">
+          <img id="modalVideoAvatar" src="" alt="Author">
+          <div>
+            <span id="modalVideoAuthorName"><b>User Name</b></span>
+            <small style="display:block;opacity:0.75" id="modalVideoAuthorHandle">@username</small>
+          </div>
+        </div>
+        <p class="video-modal-title" id="modalVideoCaption">Video Caption</p>
+        <div class="video-modal-audio-badge">
+          <div class="sound-wave-icon"><span style="background:white"></span><span style="background:white"></span><span style="background:white"></span></div>
+          <span id="modalVideoAudioTitle">🎵 Audio Song Title</span>
+        </div>
       </div>
     </div>
+  </div>
+
   <script src="js/soundEngine.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>

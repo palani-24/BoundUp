@@ -211,6 +211,79 @@
     $$('.js-follow',el).forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('following');btn.textContent=btn.classList.contains('following')?'Following':'Follow';toast(btn.textContent)}));
   }
 
+  /* FULL-SCREEN INTERACTIVE VIDEO & REAL SONG PLAYER MODAL */
+  function openVideoPlayerModal(videoData){
+    const modal = $('#videoPlayerModal');
+    const player = $('#modalVideoPlayer');
+    const avatar = $('#modalVideoAvatar');
+    const nameEl = $('#modalVideoAuthorName');
+    const handleEl = $('#modalVideoAuthorHandle');
+    const captionEl = $('#modalVideoCaption');
+    const audioTitleEl = $('#modalVideoAudioTitle');
+
+    if(!modal || !player) return;
+
+    if(window.BoundUpSound) window.BoundUpSound.stopAllAudio();
+
+    if(avatar) avatar.src = videoData.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
+    if(nameEl) nameEl.innerHTML = `<b>${videoData.name || videoData.author || 'BoundUp User'}</b>`;
+    if(handleEl) handleEl.textContent = `@${videoData.username || videoData.author || 'itz_sam'}`;
+    if(captionEl) captionEl.textContent = videoData.caption || videoData.title || 'BoundUp Video Reel';
+    if(audioTitleEl) audioTitleEl.textContent = videoData.audioTrack || '🎵 Original Song Track';
+
+    player.src = videoData.videoUrl || videoData.img;
+    player.muted = false;
+    player.volume = 1.0;
+
+    modal.classList.remove('hidden');
+
+    const soundGenre = (videoData.audioTrack && (videoData.audioTrack.includes('💕') || videoData.audioTrack.toLowerCase().includes('kadhale') || videoData.audioTrack.toLowerCase().includes('love') || videoData.audioTrack.toLowerCase().includes('nira'))) ? 'love' : 'mass';
+
+    const playPromise = player.play();
+    if(playPromise !== undefined){
+      playPromise.then(()=>{
+        if(window.BoundUpSound) window.BoundUpSound.playVideoMusicTrack(soundGenre);
+      }).catch(err=>{
+        if(window.BoundUpSound) window.BoundUpSound.playVideoMusicTrack(soundGenre);
+      });
+    }
+  }
+
+  function closeVideoPlayerModal(){
+    const modal = $('#videoPlayerModal');
+    const player = $('#modalVideoPlayer');
+
+    if(player){
+      player.pause();
+      player.src = '';
+      try { player.currentTime = 0; } catch(e) {}
+    }
+
+    if(window.BoundUpSound){
+      window.BoundUpSound.stopAllAudio();
+    }
+
+    if(modal){
+      modal.classList.add('hidden');
+    }
+  }
+
+  function initVideoPlayerModalEvents(){
+    const closeBtn = $('#closeVideoModalBtn');
+    const modal = $('#videoPlayerModal');
+
+    if(closeBtn) closeBtn.addEventListener('click', closeVideoPlayerModal);
+    if(modal){
+      modal.addEventListener('click', (e)=>{
+        if(e.target === modal) closeVideoPlayerModal();
+      });
+    }
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') closeVideoPlayerModal();
+    });
+  }
+
   function bindPostActions(root=document){
     $$('.js-like',root).forEach(btn=>btn.addEventListener('click',()=>{
       const card=btn.closest('[data-post-id]'), id=Number(card.dataset.postId); let liked=store.json('liked',[]); const count=$('.js-like-count',card); let n=Number(count.textContent.replace(/,/g,''));
@@ -218,6 +291,26 @@
       else { liked.push(id); btn.textContent='♥'; btn.classList.add('liked'); n++; if(window.BoundUpSound) window.BoundUpSound.playLike(); }
       store.setJson('liked',liked); count.textContent=n.toLocaleString();
     }));
+
+    $$('.js-post-video', root).forEach((vid)=>{
+      vid.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const card = vid.closest('[data-post-id]');
+        const id = Number(card.dataset.postId);
+        const post = [...store.json('custom_posts', []), ...D.posts].find(p => p.id === id);
+        if(post && (post.isVideo || post.videoUrl)){
+          const u = userById(post.user);
+          openVideoPlayerModal({
+            avatar: u.avatar,
+            name: u.name,
+            username: u.username,
+            caption: post.caption,
+            audioTrack: post.audioTrack,
+            videoUrl: post.videoUrl || post.img
+          });
+        }
+      });
+    });
 
     $$('.js-sound-toggle',root).forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -254,7 +347,7 @@
     const allReels = [...customReels, ...D.reels];
 
     el.innerHTML=allReels.map(r=>`<article class="reel-card">
-      <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+      <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;cursor:pointer"></video>
       <button class="video-sound-btn js-reel-sound-toggle" style="top:14px;bottom:auto;right:14px;">🔇</button>
       <div class="reel-overlay">
         <b>${r.title}</b>
@@ -270,8 +363,28 @@
       </div>
     </article>`).join('');
 
+    $$('.reel-card', el).forEach((card, idx)=>{
+      card.addEventListener('click', (e)=>{
+        if(e.target.classList.contains('js-reel-sound-toggle') || e.target.classList.contains('js-reel-like') || e.target.classList.contains('js-share')) return;
+        const customReels = store.json('custom_reels', []);
+        const allReels = [...customReels, ...D.reels];
+        const reel = allReels[idx];
+        if(reel){
+          openVideoPlayerModal({
+            avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+            name: reel.author || 'Reel Creator',
+            username: reel.author || 'creator',
+            caption: reel.title,
+            audioTrack: reel.audioTrack,
+            videoUrl: reel.videoUrl
+          });
+        }
+      });
+    });
+
     $$('.js-reel-sound-toggle',el).forEach(btn=>{
-      btn.addEventListener('click',()=>{
+      btn.addEventListener('click',(e)=>{
+        e.stopPropagation();
         const video = btn.previousElementSibling;
         const card = btn.closest('.reel-card');
         let soundGenre = 'mass';
@@ -985,7 +1098,7 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initWebRTCCalls();
+    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initWebRTCCalls();
     document.body.classList.add('ready');
   });
 })();

@@ -1,6 +1,7 @@
 /**
  * BoundUp Web Audio Engine & Real Sound FX Generator
  * Synthesizes real-time sound effects (notification chimes, call ringtones, like pops, video audio controls & BGM beats)
+ * Includes Instant Audio Cutoff on Modal Close (stopAllAudio)
  */
 (function(window) {
   let audioCtx = null;
@@ -118,10 +119,8 @@
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      // Note frequencies: Mass BGM vs Romantic Tamil Love Song chords vs Chill Synth
       let notes = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63];
       if (genre === 'love' || genre === 'romantic') {
-        // Soft Romantic Major 7th arpeggio (C4, E4, G4, B4, D5)
         notes = [261.63, 329.63, 392.00, 493.88, 587.33, 523.25];
       } else if (genre === 'chill') {
         notes = [261.63, 293.66, 329.63, 392.00, 440.00];
@@ -150,7 +149,7 @@
           osc1.frequency.setValueAtTime(freq, now);
           osc2.frequency.setValueAtTime(freq / 2, now);
 
-          const vol = (genre === 'love' || genre === 'romantic') ? 0.12 : 0.16;
+          const vol = (genre === 'love' || genre === 'romantic') ? 0.14 : 0.18;
           const duration = (genre === 'love' || genre === 'romantic') ? 0.45 : 0.3;
 
           gain.gain.setValueAtTime(vol, now);
@@ -179,6 +178,22 @@
         clearInterval(bgmInterval);
         bgmInterval = null;
       }
+    },
+
+    // Instant Audio & Sound Cutoff: Stops all video playback & all Web Audio sounds completely!
+    stopAllAudio() {
+      this.stopVideoMusic();
+      this.stopRingtone();
+      this.stopRingback();
+
+      // Pause all video & audio elements on document
+      const mediaElements = Array.from(document.querySelectorAll('video, audio'));
+      mediaElements.forEach(el => {
+        try {
+          el.pause();
+          el.muted = true;
+        } catch(e) {}
+      });
     },
 
     // Enable Video Sound: handles unmuting HTML5 audio & synchronized sound beat

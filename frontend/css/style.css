@@ -234,14 +234,109 @@
   gap: 10px;
   margin-top: 4px;
 }
-.sound-select-row select {
-  flex: 1;
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 800;
+/* Full-Screen Video Player Modal CSS */
+.video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.94);
+  backdrop-filter: blur(30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
+.video-modal-card {
+  position: relative;
+  width: min(440px, 98vw);
+  height: min(780px, 92vh);
+  border-radius: 34px;
+  overflow: hidden;
+  background: #050505;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.video-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+.video-modal-close:hover {
+  background: rgba(255, 48, 64, 0.85);
+  transform: scale(1.1);
+}
+.video-modal-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  display: block;
+}
+.video-modal-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 80px 20px 24px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.95));
+  color: white;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.video-modal-info * {
+  pointer-events: auto;
+}
+.video-modal-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 850;
+  font-size: 15px;
+}
+.video-modal-author img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--brand);
+}
+.video-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+.video-modal-audio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+  width: fit-content;
+}
+
 
 
