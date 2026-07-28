@@ -18,15 +18,19 @@ import { downloadRoutes } from './routes/downloadRoutes';
 import { musicRoutes } from './routes/musicRoutes';
 import { mobileBlueprintRoutes } from './routes/mobileBlueprintRoutes';
 import { postRoutes, storyRoutes, reelRoutes, profileRoutes, notificationRoutes, searchRoutes, reportRoutes, callRoutes, adminRoutes } from './routes/mobileSocialRoutes';
+import { uploadRoutes } from './routes/uploadRoutes';
+import path from 'path';
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: process.env.CLIENT_URL || '*' } });
 app.set('io', io);
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 200 }));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'BoundUp API' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/anime', animeRoutes);
@@ -46,12 +50,27 @@ app.use('/api/search', searchRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
+
 io.on('connection', socket => {
+  socket.on('user:register', username => {
+    socket.join(`user:${username}`);
+  });
   socket.on('room:join', roomId => socket.join(roomId));
   socket.on('typing', data => socket.to(data.roomId).emit('typing', data));
   socket.on('message:send', data => io.to(data.roomId || 'demo').emit('message:new', data));
+  socket.on('message:send_direct', data => {
+    if(data.roomId) io.to(data.roomId).emit('message:new', data);
+    if(data.targetUser) io.to(`user:${data.targetUser}`).emit('message:incoming', data);
+  });
+  socket.on('request:accept', data => {
+    if(data.targetUser) io.to(`user:${data.targetUser}`).emit('request:accepted', data);
+  });
   socket.on('call:join', data => socket.join(data.callId));
   socket.on('call:signal', data => socket.to(data.callId).emit('call:signal', data));
+  socket.on('call:offer', data => socket.to(data.callId).emit('call:offer', data));
+  socket.on('call:answer', data => socket.to(data.callId).emit('call:answer', data));
+  socket.on('call:ice-candidate', data => socket.to(data.callId).emit('call:ice-candidate', data));
 });
 app.use(errorHandler);
 const PORT = Number(process.env.PORT || 5000);

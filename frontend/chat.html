@@ -1,1 +1,90 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Chat | BoundUp</title><meta name="theme-color" content="#ff6b00"><link rel="manifest" href="manifest.json"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="css/style.css"><script defer src="js/data.js"></script><script defer src="js/app.js"></script></head><body class=""><div class="bg-orbs"></div><div class="shell"><main class="main"><section class="page fade-up"><div class="chat-shell glass"><aside class="chat-list"><h2>Messages</h2><input class="search" placeholder="Search chats"><div style="margin-top:14px"><div class="profile-mini chat-person"><img class="avatar" src="assets/avatar-1.svg"><div><b>Riya Music</b><div class="muted">Online now</div></div></div><div class="profile-mini chat-person"><img class="avatar" src="assets/avatar-2.svg"><div><b>Arun Gaming</b><div class="muted">Online now</div></div></div><div class="profile-mini chat-person"><img class="avatar" src="assets/avatar-3.svg"><div><b>Nila Voice</b><div class="muted">Online now</div></div></div><div class="profile-mini chat-person"><img class="avatar" src="assets/avatar-4.svg"><div><b>Vicky Creator</b><div class="muted">Online now</div></div></div><div class="profile-mini chat-person"><img class="avatar" src="assets/avatar-5.svg"><div><b>Meera Study</b><div class="muted">Online now</div></div></div></div></aside><section class="chat-window"><header class="chat-top"><div class="user-mini"><img class="avatar" src="assets/avatar-2.svg"><span><b>Riya Music</b><small>typing sometimes • online</small></span></div><div class="icon-row"><button class="icon-btn" onclick="boundToast('Voice call UI ready')">☎</button><button class="icon-btn" onclick="boundToast('Video call UI ready')">▣</button></div></header><main id="thread" class="thread"><div class="bubble">Heyy! 🔥</div><div class="bubble">Did you check the new BoundUp reels?</div><div class="bubble me">Yes, it looks like a clean Instagram-style app now 🧡</div><div class="bubble">Awesome! Send a voice bubble next.</div></main><form id="chatForm" class="composer"><button type="button" onclick="boundToast('Emoji picker ready')">😊</button><input id="chatInput" placeholder="Message..."><button>➤</button></form></section></div></section></main></div></body></html>net start MongoDB
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat | BoundUp</title>
+  <meta name="theme-color" content="#ff6b00">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script defer src="js/data.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div class="shell">
+    <main class="main">
+      <section class="page fade-up">
+        <div class="chat-shell glass">
+          <aside class="chat-list">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <h2 style="margin:0">Messages</h2>
+              <span id="socketBadge" class="socket-badge">● Live</span>
+            </div>
+
+            <!-- Active User Account Switcher -->
+            <div class="account-switcher-box">
+              <span style="font-size:12px;font-weight:800;color:var(--muted)">Logged in as:</span>
+              <select id="activeUserSelect">
+                <option value="itz_sam">@itz_sam (Sam)</option>
+                <option value="riya_music">@riya_music (Riya)</option>
+                <option value="arun_gaming">@arun_gaming (Arun)</option>
+                <option value="nila_voice">@nila_voice (Nila)</option>
+                <option value="vicky_creator">@vicky_creator (Vicky)</option>
+              </select>
+            </div>
+
+            <!-- Primary vs Requests Tab Bar -->
+            <div class="chat-tab-bar">
+              <div class="chat-tab active" id="tabPrimary">Primary</div>
+              <div class="chat-tab" id="tabRequests">Requests <span id="reqBadgeCount" class="request-badge hidden">0</span></div>
+            </div>
+
+            <input id="chatSearchInput" class="search" placeholder="Search chats" style="margin-top:12px">
+            
+            <!-- Contact List Container -->
+            <div style="margin-top:14px" id="contactListContainer"></div>
+          </aside>
+
+          <section class="chat-window">
+            <header class="chat-top">
+              <div class="user-mini">
+                <img class="avatar" id="activeChatAvatar" src="assets/avatar-1.svg" alt="Active Chat">
+                <span>
+                  <b id="activeChatName">BoundUp AI Assistant</b>
+                  <small id="activeChatStatus">Online • Smart AI Assistant</small>
+                </span>
+              </div>
+              <div class="icon-row">
+                <a href="mobile-calls.html" class="icon-btn" title="Voice Call">☎</a>
+                <a href="mobile-calls.html" class="icon-btn" title="Video Call">▣</a>
+              </div>
+            </header>
+
+            <!-- Message Request Acceptance Banner -->
+            <div id="requestBannerOverlay" class="request-banner-overlay hidden">
+              <p id="requestBannerText">Accept message request from @user to start chatting?</p>
+              <div class="request-btn-group">
+                <button type="button" class="btn-accept" id="acceptRequestBtn">Accept Request</button>
+                <button type="button" class="btn-decline" id="declineRequestBtn">Decline</button>
+              </div>
+            </div>
+
+            <main id="thread" class="thread"></main>
+
+            <form id="chatForm" class="composer">
+              <input type="file" id="chatMediaInput" accept="image/*" style="display:none">
+              <button type="button" id="chatMediaBtn" title="Attach Image">📷</button>
+              <button type="button" id="chatEmojiBtn" title="Insert Emoji">😊</button>
+              <input id="chatInput" placeholder="Write a message..." autocomplete="off">
+              <button id="chatSendBtn" title="Send Message">➤</button>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

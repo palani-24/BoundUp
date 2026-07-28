@@ -1,4 +1,3 @@
-
 (function(){
   const D = window.BOUNDUP_DATA || {users:[],posts:[],reels:[],translations:{en:{}}};
   const $ = (s, r=document)=>r.querySelector(s);
@@ -20,7 +19,7 @@
   window.boundToast = toast;
 
   function initTheme(){
-    const theme = store.get('theme') || 'dark';
+    const theme = store.get('theme') || 'light';
     document.documentElement.dataset.theme = theme;
     $$('.js-theme-label').forEach(el=>el.textContent = theme==='dark'?'Dark':'Light');
   }
@@ -51,24 +50,114 @@
   }
 
   function userById(id){ return D.users.find(u=>u.id===id) || D.users[0]; }
+
+  /* Interactive Story Viewer Modal */
+  let currentStoryIndex = 0;
+  let storyTimer = null;
+
   function renderStories(){
     const el=$('#stories'); if(!el) return;
-    el.innerHTML = D.users.map(u=>`<a class="story" href="profile.html?u=${u.id}"><div class="story-ring"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username}</small></a>`).join('');
+    el.innerHTML = D.users.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer"><div class="story-ring"><img src="${u.avatar}" alt="${u.name}"></div><small>${u.username}</small></div>`).join('');
+    $$('.js-story-open').forEach(btn => btn.addEventListener('click', () => {
+      openStoryViewer(Number(btn.dataset.index));
+    }));
   }
+
+  function openStoryViewer(index){
+    currentStoryIndex = index;
+    const modal = $('#storyViewerModal');
+    if(!modal) return;
+    const user = D.users[currentStoryIndex] || D.users[0];
+    const imgEl = $('#storyImg');
+    const avatarEl = $('#storyAvatar');
+    const userEl = $('#storyUsername');
+
+    if(imgEl) imgEl.src = D.posts[currentStoryIndex % D.posts.length]?.img || user.avatar;
+    if(avatarEl) avatarEl.src = user.avatar;
+    if(userEl) userEl.innerHTML = `<b>${user.username}</b> <small style="opacity:0.7">${user.name}</small>`;
+    
+    modal.classList.remove('hidden');
+    startStoryProgress();
+  }
+
+  function startStoryProgress(){
+    if(storyTimer) clearInterval(storyTimer);
+    const fillEl = $('#storyProgressFill');
+    if(!fillEl) return;
+    fillEl.style.width = '0%';
+    let pct = 0;
+    storyTimer = setInterval(()=>{
+      pct += 2;
+      fillEl.style.width = pct + '%';
+      if(pct >= 100){
+        clearInterval(storyTimer);
+        nextStory();
+      }
+    }, 80);
+  }
+
+  function nextStory(){
+    if(currentStoryIndex < D.users.length - 1){
+      openStoryViewer(currentStoryIndex + 1);
+    } else {
+      closeStoryViewer();
+    }
+  }
+
+  function prevStory(){
+    if(currentStoryIndex > 0){
+      openStoryViewer(currentStoryIndex - 1);
+    } else {
+      closeStoryViewer();
+    }
+  }
+
+  function closeStoryViewer(){
+    if(storyTimer) clearInterval(storyTimer);
+    const modal = $('#storyViewerModal');
+    if(modal) modal.classList.add('hidden');
+  }
+
+  function initStoryEvents(){
+    const closeBtn = $('#closeStoryBtn');
+    const leftNav = $('#storyNavLeft');
+    const rightNav = $('#storyNavRight');
+    const sendBtn = $('#sendStoryReplyBtn');
+    const replyInput = $('#storyReplyInput');
+
+    if(closeBtn) closeBtn.addEventListener('click', closeStoryViewer);
+    if(leftNav) leftNav.addEventListener('click', prevStory);
+    if(rightNav) rightNav.addEventListener('click', nextStory);
+    if(sendBtn) sendBtn.addEventListener('click', ()=>{
+      if(replyInput && replyInput.value.trim()){
+        toast(`Reply sent to @${D.users[currentStoryIndex]?.username || 'user'}`);
+        replyInput.value = '';
+        closeStoryViewer();
+      }
+    });
+  }
+
   function postHtml(p){
     const u=userById(p.user), liked=store.json('liked',[]).includes(p.id), saved=store.json('saved',[]).includes(p.id);
-    return `<article class="post fade-up" data-post-id="${p.id}"><header class="post-head"><a class="user-mini" href="profile.html?u=${u.id}"><img class="avatar" src="${u.avatar}" alt="${u.name}"><span><b>${u.username}</b><small>${p.tag} • 2h</small></span></a><button class="more">⋯</button></header><img class="post-img" src="${p.img}" alt="${p.tag}"><div class="post-actions"><div class="icon-row"><button class="icon-btn js-like ${liked?'liked':''}" title="Like">${liked?'♥':'♡'}</button><button class="icon-btn js-comment-focus" title="Comment">💬</button><button class="icon-btn js-share" title="Share">↗</button></div><button class="icon-btn js-save" title="Save">${saved?'★':'☆'}</button></div><div class="post-body"><div class="likes"><span class="js-like-count">${(p.likes+(liked?1:0)).toLocaleString()}</span> likes</div><div class="caption"><b>${u.username}</b>${p.caption}</div><a class="comments-link" href="#">View all ${p.comments} comments</a></div><form class="comment-box js-comment-form"><input placeholder="Add a comment..."><button>Post</button></form></article>`;
+    const isVideo = p.img && p.img.endsWith('.mp4');
+    const mediaTag = isVideo ? `<video class="post-img" src="${p.img}" controls autoplay loop muted></video>` : `<img class="post-img" src="${p.img}" alt="${p.tag}">`;
+    return `<article class="post fade-up" data-post-id="${p.id}"><header class="post-head"><a class="user-mini" href="profile.html?u=${u.id}"><img class="avatar" src="${u.avatar}" alt="${u.name}"><span><b>${u.username}</b><small>${p.tag} • 2h</small></span></a><button class="more">⋯</button></header>${mediaTag}<div class="post-actions"><div class="icon-row"><button class="icon-btn js-like ${liked?'liked':''}" title="Like">${liked?'♥':'♡'}</button><button class="icon-btn js-comment-focus" title="Comment">💬</button><button class="icon-btn js-share" title="Share">↗</button></div><button class="icon-btn js-save" title="Save">${saved?'★':'☆'}</button></div><div class="post-body"><div class="likes"><span class="js-like-count">${(p.likes+(liked?1:0)).toLocaleString()}</span> likes</div><div class="caption"><b>${u.username}</b>${p.caption}</div><a class="comments-link" href="#">View all ${p.comments} comments</a></div><form class="comment-box js-comment-form"><input placeholder="Add a comment..."><button>Post</button></form></article>`;
   }
+
   function renderFeed(){
     const el=$('#feed'); if(!el) return;
-    el.innerHTML=D.posts.map(postHtml).join('');
+    const customPosts = store.json('custom_posts', []);
+    const allPosts = [...customPosts, ...D.posts];
+    el.innerHTML=allPosts.map(postHtml).join('');
     bindPostActions(el);
   }
+
   function renderRightPanel(){
     const el=$('#rightPanel'); if(!el) return;
     el.innerHTML=`<div class="side-card glass"><div class="profile-mini"><img class="avatar" src="assets/avatar-1.svg"><div><b>Sam Bound</b><div class="muted">@itz_sam</div></div><a class="switch" href="profile.html">View</a></div><h3 data-i18n="suggestions">${t.suggestions||'Suggested for you'}</h3>${D.users.slice(1,6).map(u=>`<div class="suggestion"><img class="avatar" src="${u.avatar}"><div><b>${u.name}</b><div class="muted">${u.followers} followers</div></div><button class="follow-btn js-follow">Follow</button></div>`).join('')}</div><div class="side-card glass"><h3 data-i18n="trending">${t.trending||'Trending on BoundUp'}</h3>${['#TamilBGM','#MoodMatch','#AIFeed','#CreatorRoom','#GamingAura','#VoiceBubble'].map(x=>`<span class="trend-tag">${x}</span>`).join('')}</div>`;
     $$('.js-follow',el).forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('following');btn.textContent=btn.classList.contains('following')?'Following':'Follow';toast(btn.textContent)}));
   }
+
   function bindPostActions(root=document){
     $$('.js-like',root).forEach(btn=>btn.addEventListener('click',()=>{
       const card=btn.closest('[data-post-id]'), id=Number(card.dataset.postId); let liked=store.json('liked',[]); const count=$('.js-like-count',card); let n=Number(count.textContent.replace(/,/g,''));
@@ -80,56 +169,599 @@
     $$('.js-comment-focus',root).forEach(btn=>btn.addEventListener('click',()=>$('.js-comment-form input',btn.closest('.post')).focus()));
     $$('.js-comment-form',root).forEach(f=>f.addEventListener('submit',e=>{e.preventDefault(); const input=$('input',f); if(input.value.trim()){toast('Comment added'); input.value='';}}));
   }
+
   function renderExplore(){
     const grid=$('#exploreGrid'); if(!grid) return;
     grid.innerHTML=[...D.posts,...D.posts].map((p,i)=>`<a class="grid-card" data-info="♡ ${(p.likes+i*20).toLocaleString()} • 💬 ${p.comments+i}" href="home.html#post-${p.id}"><img src="${p.img}" alt="${p.tag}"></a>`).join('');
     const search=$('#globalSearch'); if(search) search.addEventListener('input',()=>{ const q=search.value.toLowerCase(); $$('.grid-card',grid).forEach((c,i)=>{ const p=D.posts[i%D.posts.length]; c.style.display=(p.caption.toLowerCase().includes(q)||p.tag.toLowerCase().includes(q))?'block':'none'; }); });
   }
+
   function renderReels(){
     const el=$('#reelsGrid'); if(!el) return;
     el.innerHTML=D.reels.map(r=>`<article class="reel-card"><img src="${r.img}" alt="${r.title}"><div class="play">▶</div><div class="reel-overlay"><b>${r.title}</b><div>${r.views} views</div><div class="icon-row"><button class="icon-btn js-reel-like">♡</button><button class="icon-btn js-share">↗</button></div></div></article>`).join('');
     $$('.js-reel-like',el).forEach(b=>b.addEventListener('click',()=>{b.textContent=b.textContent==='♡'?'♥':'♡';b.classList.toggle('liked');}));
     $$('.js-share',el).forEach(b=>b.addEventListener('click',()=>toast('Reel shared')));
   }
+
+  /* FULL REAL-TIME MULTI-ACCOUNT CHAT & MESSAGE REQUEST SYSTEM */
   function initChat(){
-    const form=$('#chatForm'), input=$('#chatInput'), thread=$('#thread'); if(!form) return;
-    form.addEventListener('submit',e=>{ e.preventDefault(); const msg=input.value.trim(); if(!msg) return; input.value=''; thread.insertAdjacentHTML('beforeend',`<div class="bubble me">${msg}</div>`); thread.scrollTop=thread.scrollHeight; setTimeout(()=>{thread.insertAdjacentHTML('beforeend',`<div class="bubble"><div class="typing"><i></i><i></i><i></i></div></div>`); thread.scrollTop=thread.scrollHeight;},300); setTimeout(()=>{ const last=thread.lastElementChild; if(last) last.outerHTML=`<div class="bubble">BoundUp AI reply: Nice! I can help you create a caption, translate, or summarize this chat.</div>`; thread.scrollTop=thread.scrollHeight;},1300); });
-    $$('.chat-person').forEach(p=>p.addEventListener('click',()=>toast('Chat opened')));
+    const form=$('#chatForm'), input=$('#chatInput'), thread=$('#thread');
+    if(!form || !thread) return;
+
+    let activeTab = 'primary'; // 'primary' | 'requests'
+    let currentUser = store.get('chat_user') || 'itz_sam';
+    let targetContactId = 'riya_music';
+    let socket = null;
+
+    // Contact Metadata registry
+    const allUsers = {
+      'ai': { handle: 'ai', name: 'BoundUp AI Assistant', avatar: 'assets/avatar-1.svg', status: 'Online • AI Bot', accepted: true },
+      'itz_sam': { handle: 'itz_sam', name: 'Sam Bound', avatar: 'assets/avatar-1.svg', status: 'Online (You)', accepted: true },
+      'riya_music': { handle: 'riya_music', name: 'Riya Music', avatar: 'assets/avatar-2.svg', status: 'Online • Tamil BGM Creator', accepted: true },
+      'arun_gaming': { handle: 'arun_gaming', name: 'Arun Gaming', avatar: 'assets/avatar-3.svg', status: 'Online • Streamer', accepted: true },
+      'nila_voice': { handle: 'nila_voice', name: 'Nila Voice', avatar: 'assets/avatar-4.svg', status: 'Active 5m ago', accepted: false },
+      'vicky_creator': { handle: 'vicky_creator', name: 'Vicky Creator', avatar: 'assets/avatar-5.svg', status: 'Online', accepted: false }
+    };
+
+    // User Pair Room Helper
+    function getRoomId(u1, u2){
+      const sorted = [u1, u2].sort();
+      return `room_${sorted[0]}_${sorted[1]}`;
+    }
+
+    // Default message threads
+    const defaultThreads = {
+      [getRoomId('itz_sam', 'ai')]: [
+        { sender: 'ai', text: '👋 Hi Sam! I am BoundUp AI. Ask me for captions, Tamil translation, or reel summaries!', time: '12:00 PM' }
+      ],
+      [getRoomId('itz_sam', 'riya_music')]: [
+        { sender: 'riya_music', text: 'Hey Sam! Did you hear the new Tamil BGM edit on BoundUp?', time: '11:30 AM' },
+        { sender: 'itz_sam', text: 'Yes! The bass drop was fire 🔥', time: '11:32 AM' }
+      ],
+      [getRoomId('itz_sam', 'nila_voice')]: [
+        { sender: 'nila_voice', text: 'Hey Sam! I sent you a voice request for the upcoming project.', time: '10:00 AM' }
+      ],
+      [getRoomId('riya_music', 'arun_gaming')]: [
+        { sender: 'arun_gaming', text: 'Riya! Can I use your BGM track for my live gaming stream?', time: '09:00 AM' }
+      ]
+    };
+
+    // Accepted contacts registry per user
+    let acceptedMap = store.json('chat_accepted_map', {
+      'itz_sam': ['ai', 'riya_music', 'arun_gaming'],
+      'riya_music': ['itz_sam', 'arun_gaming'],
+      'arun_gaming': ['itz_sam', 'riya_music'],
+      'nila_voice': [],
+      'vicky_creator': []
+    });
+
+    let chatStorage = store.json('chat_room_storage', defaultThreads);
+
+    // Socket.IO real-time connection setup
+    if(typeof io !== 'undefined'){
+      try {
+        socket = io('http://localhost:5000');
+        socket.on('connect', ()=>{
+          const badge = $('#socketBadge');
+          if(badge){ badge.textContent = "● Live Socket.IO"; badge.classList.remove('offline'); }
+          socket.emit('user:register', currentUser);
+          joinActiveRoom();
+        });
+        socket.on('disconnect', ()=>{
+          const badge = $('#socketBadge');
+          if(badge){ badge.textContent = "○ Local Sync"; badge.classList.add('offline'); }
+        });
+        socket.on('message:new', (data)=>{
+          const currentRoom = getRoomId(currentUser, targetContactId);
+          if(data.roomId === currentRoom && data.sender !== currentUser){
+            appendBubble('other', data.text, data.media, data.time || getTimeString());
+            saveMessageToRoom(currentRoom, data.sender, data.text, data.media);
+          }
+        });
+        socket.on('message:incoming', (data)=>{
+          // If incoming message from a non-accepted user
+          if(!acceptedMap[currentUser]?.includes(data.sender)){
+            if(!acceptedMap[currentUser]) acceptedMap[currentUser] = [];
+            store.setJson('chat_accepted_map', acceptedMap);
+            renderContacts();
+            toast(`New Message Request from @${data.sender}!`);
+          }
+        });
+        socket.on('request:accepted', (data)=>{
+          if(!acceptedMap[currentUser]) acceptedMap[currentUser] = [];
+          if(!acceptedMap[currentUser].includes(data.from)){
+            acceptedMap[currentUser].push(data.from);
+            store.setJson('chat_accepted_map', acceptedMap);
+          }
+          renderContacts();
+          renderThread();
+          toast(`@${data.from} accepted your message request!`);
+        });
+      } catch(err) {
+        console.log('Socket connection offline:', err);
+      }
+    }
+
+    function getTimeString(){
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function joinActiveRoom(){
+      if(socket && currentUser && targetContactId){
+        const roomId = getRoomId(currentUser, targetContactId);
+        socket.emit('room:join', roomId);
+      }
+    }
+
+    function saveMessageToRoom(roomId, sender, text, media = null){
+      if(!chatStorage[roomId]) chatStorage[roomId] = [];
+      chatStorage[roomId].push({ sender, text, media, time: getTimeString() });
+      store.setJson('chat_room_storage', chatStorage);
+    }
+
+    function appendBubble(senderType, text, media = null, time = getTimeString()){
+      const isMe = senderType === 'me' || senderType === currentUser;
+      let mediaMarkup = media ? `<img class="chat-img-attachment" src="${media}" alt="Attachment">` : '';
+      let bubbleHtml = `<div class="bubble ${isMe ? 'me' : ''}"><div>${text || ''}</div>${mediaMarkup}<span class="bubble-time">${time}${isMe ? ' ✓✓' : ''}</span></div>`;
+      thread.insertAdjacentHTML('beforeend', bubbleHtml);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function renderContacts(){
+      const container = $('#contactListContainer');
+      if(!container) return;
+
+      const userAccepted = acceptedMap[currentUser] || [];
+      const keys = Object.keys(allUsers).filter(k => k !== currentUser);
+
+      let primaryList = [];
+      let requestList = [];
+
+      keys.forEach(key => {
+        if(userAccepted.includes(key)){
+          primaryList.push(allUsers[key]);
+        } else {
+          // Check if there is message history
+          const roomId = getRoomId(currentUser, key);
+          if(chatStorage[roomId] && chatStorage[roomId].length > 0){
+            requestList.push(allUsers[key]);
+          } else {
+            primaryList.push(allUsers[key]); // Available to chat
+          }
+        }
+      });
+
+      const badgeCount = $('#reqBadgeCount');
+      if(badgeCount){
+        if(requestList.length > 0){
+          badgeCount.textContent = requestList.length;
+          badgeCount.classList.remove('hidden');
+        } else {
+          badgeCount.classList.add('hidden');
+        }
+      }
+
+      const activeList = activeTab === 'primary' ? primaryList : requestList;
+
+      if(activeList.length === 0){
+        container.innerHTML = `<p class="muted" style="text-align:center;padding:20px;font-weight:800">No ${activeTab} messages</p>`;
+        return;
+      }
+
+      container.innerHTML = activeList.map(u => `
+        <div class="profile-mini chat-person ${u.handle === targetContactId ? 'active' : ''}" data-handle="${u.handle}">
+          <img class="avatar" src="${u.avatar}" alt="${u.name}">
+          <div><b>${u.name}</b><div class="muted">@${u.handle} • ${u.status}</div></div>
+        </div>
+      `).join('');
+
+      $$('.chat-person', container).forEach(el => {
+        el.addEventListener('click', ()=>{
+          targetContactId = el.dataset.handle;
+          $$('.chat-person', container).forEach(c => c.classList.remove('active'));
+          el.classList.add('active');
+          joinActiveRoom();
+          renderThread();
+        });
+      });
+    }
+
+    function renderThread(){
+      thread.innerHTML = '';
+      const roomId = getRoomId(currentUser, targetContactId);
+      const messages = chatStorage[roomId] || [];
+      
+      messages.forEach(msg => {
+        appendBubble(msg.sender, msg.text, msg.media, msg.time);
+      });
+
+      const targetMeta = allUsers[targetContactId] || { name: 'User', avatar: 'assets/avatar-1.svg', status: 'Online' };
+      const nameEl = $('#activeChatName');
+      const avatarEl = $('#activeChatAvatar');
+      const statusEl = $('#activeChatStatus');
+
+      if(nameEl) nameEl.textContent = `${targetMeta.name} (@${targetContactId})`;
+      if(avatarEl) avatarEl.src = targetMeta.avatar;
+      if(statusEl) statusEl.textContent = targetMeta.status;
+
+      // Handle Request Acceptance Banner Overlay
+      const userAccepted = acceptedMap[currentUser] || [];
+      const isAccepted = userAccepted.includes(targetContactId) || targetContactId === 'ai';
+      const banner = $('#requestBannerOverlay');
+      const bannerText = $('#requestBannerText');
+
+      if(!isAccepted && messages.length > 0){
+        if(banner) banner.classList.remove('hidden');
+        if(bannerText) bannerText.textContent = `Accept message request from @${targetContactId} to start chatting?`;
+      } else {
+        if(banner) banner.classList.add('hidden');
+      }
+    }
+
+    // Account Switcher Listener
+    const userSelect = $('#activeUserSelect');
+    if(userSelect){
+      userSelect.value = currentUser;
+      userSelect.addEventListener('change', ()=>{
+        currentUser = userSelect.value;
+        store.set('chat_user', currentUser);
+        if(socket) socket.emit('user:register', currentUser);
+        
+        // Pick first contact
+        const keys = Object.keys(allUsers).filter(k => k !== currentUser);
+        targetContactId = keys[0] || 'ai';
+
+        joinActiveRoom();
+        renderContacts();
+        renderThread();
+        toast(`Switched account to @${currentUser}`);
+      });
+    }
+
+    // Tab Bar Listeners
+    const tabPrimary = $('#tabPrimary');
+    const tabRequests = $('#tabRequests');
+    if(tabPrimary && tabRequests){
+      tabPrimary.addEventListener('click', ()=>{
+        activeTab = 'primary';
+        tabPrimary.classList.add('active');
+        tabRequests.classList.remove('active');
+        renderContacts();
+        renderThread();
+      });
+      tabRequests.addEventListener('click', ()=>{
+        activeTab = 'requests';
+        tabRequests.classList.add('active');
+        tabPrimary.classList.remove('active');
+        renderContacts();
+        renderThread();
+      });
+    }
+
+    // Accept / Decline Request Listener
+    const acceptBtn = $('#acceptRequestBtn');
+    const declineBtn = $('#declineRequestBtn');
+
+    if(acceptBtn){
+      acceptBtn.addEventListener('click', ()=>{
+        if(!acceptedMap[currentUser]) acceptedMap[currentUser] = [];
+        if(!acceptedMap[currentUser].includes(targetContactId)){
+          acceptedMap[currentUser].push(targetContactId);
+          store.setJson('chat_accepted_map', acceptedMap);
+        }
+        if(socket){
+          socket.emit('request:accept', { from: currentUser, targetUser: targetContactId });
+        }
+        toast(`Message request from @${targetContactId} accepted!`);
+        renderContacts();
+        renderThread();
+      });
+    }
+
+    if(declineBtn){
+      declineBtn.addEventListener('click', ()=>{
+        const roomId = getRoomId(currentUser, targetContactId);
+        delete chatStorage[roomId];
+        store.setJson('chat_room_storage', chatStorage);
+        toast(`Message request declined`);
+        renderContacts();
+        renderThread();
+      });
+    }
+
+    // Handle Form Submit (Sending Message)
+    let pendingMediaUrl = null;
+    const mediaInput = $('#chatMediaInput');
+    const mediaBtn = $('#chatMediaBtn');
+    const emojiBtn = $('#chatEmojiBtn');
+
+    if(mediaBtn && mediaInput){
+      mediaBtn.addEventListener('click', () => mediaInput.click());
+      mediaInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          pendingMediaUrl = evt.target.result;
+          toast('Photo attached! Click send ➤');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if(emojiBtn){
+      const emojis = ['🔥', '🧡', '✨', '🎧', '💯', '👍', '😊'];
+      emojiBtn.addEventListener('click', ()=>{
+        input.value += ' ' + emojis[Math.floor(Math.random() * emojis.length)];
+        input.focus();
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if(!text && !pendingMediaUrl) return;
+
+      const roomId = getRoomId(currentUser, targetContactId);
+      const timeStr = getTimeString();
+
+      // Append my message
+      appendBubble('me', text, pendingMediaUrl, timeStr);
+      saveMessageToRoom(roomId, currentUser, text, pendingMediaUrl);
+
+      // Emit direct Socket event
+      if(socket){
+        socket.emit('message:send_direct', {
+          roomId,
+          targetUser: targetContactId,
+          sender: currentUser,
+          text,
+          media: pendingMediaUrl,
+          time: timeStr
+        });
+      }
+
+      input.value = '';
+      pendingMediaUrl = null;
+      if(mediaInput) mediaInput.value = '';
+
+      // AI Bot Auto Reply if target is 'ai'
+      if(targetContactId === 'ai'){
+        setTimeout(()=>{
+          thread.insertAdjacentHTML('beforeend',`<div class="bubble" id="typingBubble"><div class="typing"><i></i><i></i><i></i></div></div>`);
+          thread.scrollTop = thread.scrollHeight;
+        }, 400);
+
+        setTimeout(()=>{
+          const typingBubble = $('#typingBubble');
+          if(typingBubble) typingBubble.remove();
+
+          let replyText = "";
+          const lower = text.toLowerCase();
+          if(lower.includes('caption')){
+            replyText = "✨ AI Caption: 'Living life in stereo 🎧 Tamil BGM vibe on BoundUp 🧡'";
+          } else if(lower.includes('translate') || lower.includes('tamil')){
+            replyText = "🔤 Tamil: 'BoundUp செயலியில் உங்களை வரவேற்பதில் மகிழ்ச்சி!'";
+          } else {
+            replyText = `BoundUp AI: Noted "${text}" for user @${currentUser}! Need a caption or summary?`;
+          }
+
+          appendBubble('ai', replyText, null, getTimeString());
+          saveMessageToRoom(roomId, 'ai', replyText, null);
+        }, 1300);
+      }
+    });
+
+    // Initial render
+    renderContacts();
+    renderThread();
   }
+
   function initAuth(){
     const form=$('#authForm'); if(!form) return;
     form.addEventListener('submit',e=>{ e.preventDefault(); const email=$('#email')?.value.trim(); const pass=$('#password')?.value.trim(); const err=$('#formError'); if(!email || !pass){ if(err) err.textContent='Please enter email/username and password.'; return; } if(pass.length<4){ if(err) err.textContent='Password must be at least 4 characters.'; return; } store.set('user',email); toast('Welcome to BoundUp'); setTimeout(()=>location.href='home.html',600); });
     $$('.js-password-toggle').forEach(btn=>btn.addEventListener('click',()=>{ const p=$('#password'); if(p){p.type=p.type==='password'?'text':'password';btn.textContent=p.type==='password'?'Show':'Hide';} }));
     $$('.js-guest').forEach(btn=>btn.addEventListener('click',()=>{store.set('user','guest');location.href='home.html'}));
   }
+
   function initSettings(){
     const sel=$('#languageSelect'); if(sel) sel.addEventListener('change',()=>{store.set('lang',sel.value); toast('Language changed'); setTimeout(()=>location.reload(),500);});
     $$('.toggle').forEach(tog=>tog.addEventListener('click',()=>{tog.classList.toggle('on'); if(tog.dataset.setting==='theme'){store.set('theme',tog.classList.contains('on')?'dark':'light'); initTheme();} toast('Setting updated'); }));
     const clear=$('#clearCache'); if(clear) clear.addEventListener('click',()=>{localStorage.clear();toast('Cache cleared');setTimeout(()=>location.reload(),700)});
     const logout=$('#logoutBtn'); if(logout) logout.addEventListener('click',()=>{store.set('user','');toast('Logged out');setTimeout(()=>location.href='welcome.html',500)});
   }
+
   function initDownload(){
     $$('.js-download').forEach(btn=>btn.addEventListener('click',()=>{ const box=btn.closest('.download-panel')||document; const bar=$('.download-progress span',box); const pct=$('.download-pct',box); let n=0; if(bar) bar.style.width='0%'; const timer=setInterval(()=>{ n+=Math.ceil(Math.random()*9); if(n>=100){n=100;clearInterval(timer);toast('Download ready');} if(bar) bar.style.width=n+'%'; if(pct) pct.textContent=n+'%'; },170); }));
   }
+
   function initSplash(){
     const pct=$('#splashPct'), bar=$('#splashBar'); if(!pct) return; let n=0; const timer=setInterval(()=>{n+=2; pct.textContent=n+'%'; if(bar) bar.style.width=n+'%'; if(n>=100){clearInterval(timer); setTimeout(()=>location.href='welcome.html',450)}},40);
   }
+
   function renderProfile(){
     const grid=$('#profileGrid'); if(grid) grid.innerHTML=D.posts.map(p=>`<a class="grid-card" data-info="${p.tag}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
     $$('.tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.tab').forEach(x=>x.classList.remove('active')); tab.classList.add('active'); toast(tab.textContent.trim()+' opened');}));
   }
+
   function renderSavedHistory(){
     const savedEl=$('#savedGrid'), histEl=$('#historyGrid');
     if(savedEl){ const ids=store.json('saved',[1,3]); const posts=D.posts.filter(p=>ids.includes(p.id)); savedEl.innerHTML=(posts.length?posts:D.posts.slice(0,3)).map(p=>`<a class="grid-card" data-info="Saved" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join(''); }
     if(histEl){ histEl.innerHTML=D.posts.slice().reverse().map(p=>`<a class="grid-card" data-info="Viewed" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join(''); }
   }
+
+  /* File Upload & Create Post Integration */
+  let uploadedMediaUrl = null;
+
   function initCreatePost(){
     const form=$('#createPostForm'); if(!form) return;
-    form.addEventListener('submit',e=>{e.preventDefault(); const text=$('#newCaption').value.trim(); if(!text) return toast('Write something first'); D.posts.unshift({id:Date.now(),user:1,img:'assets/post-7.svg',caption:text,likes:0,comments:0,tag:'New'}); renderFeed(); $('#newCaption').value=''; toast('Post published');});
+    const fileTrigger = $('#uploadFileTrigger');
+    const fileInput = $('#mediaFileInput');
+    const previewContainer = $('#mediaPreviewContainer');
+    const previewImg = $('#mediaPreviewImg');
+    const removeMediaBtn = $('#removeMediaBtn');
+    const aiCaptionBtn = $('#aiCaptionBtn');
+
+    if(fileTrigger && fileInput){
+      fileTrigger.addEventListener('click', ()=> fileInput.click());
+    }
+
+    if(fileInput){
+      fileInput.addEventListener('change', async (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+
+        try {
+          const formData = new FormData();
+          formData.append('media', file);
+          const res = await fetch('/api/upload/file', { method: 'POST', body: formData });
+          if(res.ok){
+            const data = await res.json();
+            uploadedMediaUrl = data.url;
+          }
+        } catch(err){
+          console.log('Backend upload offline, using local FileReader');
+        }
+
+        if(!uploadedMediaUrl){
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            uploadedMediaUrl = evt.target.result;
+            if(previewImg) previewImg.src = uploadedMediaUrl;
+            if(previewContainer) previewContainer.classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        } else {
+          if(previewImg) previewImg.src = uploadedMediaUrl;
+          if(previewContainer) previewContainer.classList.remove('hidden');
+        }
+        toast('Media loaded for post');
+      });
+    }
+
+    if(removeMediaBtn){
+      removeMediaBtn.addEventListener('click', ()=>{
+        uploadedMediaUrl = null;
+        if(previewContainer) previewContainer.classList.add('hidden');
+        if(fileInput) fileInput.value = '';
+      });
+    }
+
+    if(aiCaptionBtn){
+      const captions = [
+        "✨ Tamil BGM Vibe • BoundUp Moments 🧡 #BoundUp #VibeCheck",
+        "🔥 Living the best aesthetic life on BoundUp! 🚀",
+        "🎧 Mood: Repeat mode on. What's your favorite song today?",
+        "🌟 Creating memories, one post at a time. #BoundUpLife"
+      ];
+      aiCaptionBtn.addEventListener('click', ()=>{
+        const randomCap = captions[Math.floor(Math.random() * captions.length)];
+        const captionArea = $('#newCaption');
+        if(captionArea) captionArea.value = randomCap;
+        toast('AI caption generated!');
+      });
+    }
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      const text=$('#newCaption').value.trim();
+      if(!text && !uploadedMediaUrl) return toast('Write something or add media first');
+
+      const newPost = {
+        id: Date.now(),
+        user: 1,
+        img: uploadedMediaUrl || 'assets/post-1.svg',
+        caption: text || 'New BoundUp post',
+        likes: 1,
+        comments: 0,
+        tag: 'User Upload'
+      };
+
+      const customPosts = store.json('custom_posts', []);
+      customPosts.unshift(newPost);
+      store.setJson('custom_posts', customPosts);
+
+      renderFeed();
+
+      $('#newCaption').value = '';
+      uploadedMediaUrl = null;
+      if(previewContainer) previewContainer.classList.add('hidden');
+      if(fileInput) fileInput.value = '';
+
+      toast('Post published successfully!');
+    });
+  }
+
+  /* WebRTC Video Call Controller */
+  let localStream = null;
+
+  function initWebRTCCalls(){
+    const startCallBtn = $('#startCallBtn');
+    const toggleMuteBtn = $('#toggleMuteBtn');
+    const toggleCamBtn = $('#toggleCamBtn');
+    const endCallBtn = $('#endCallBtn');
+    const localVideo = $('#localVideo');
+    const statusText = $('#callStatusText');
+
+    if(!startCallBtn || !localVideo) return;
+
+    startCallBtn.addEventListener('click', async ()=>{
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        if(statusText) statusText.textContent = "Status: HD Video Call Connected Live!";
+        toast("WebRTC Camera Connected!");
+      } catch(err) {
+        if(statusText) statusText.textContent = "Status: Demo Camera Simulation Connected";
+        toast("Camera simulation connected");
+      }
+    });
+
+    if(toggleMuteBtn){
+      toggleMuteBtn.addEventListener('click', ()=>{
+        if(localStream){
+          const audioTrack = localStream.getAudioTracks()[0];
+          if(audioTrack){
+            audioTrack.enabled = !audioTrack.enabled;
+            toggleMuteBtn.textContent = audioTrack.enabled ? "🎙 Mute Mic" : "🎙 Unmute Mic";
+            toast(audioTrack.enabled ? "Microphone Unmuted" : "Microphone Muted");
+          }
+        } else {
+          toast("Toggle Mic (Call active)");
+        }
+      });
+    }
+
+    if(toggleCamBtn){
+      toggleCamBtn.addEventListener('click', ()=>{
+        if(localStream){
+          const videoTrack = localStream.getVideoTracks()[0];
+          if(videoTrack){
+            videoTrack.enabled = !videoTrack.enabled;
+            toggleCamBtn.textContent = videoTrack.enabled ? "📹 Toggle Cam" : "📹 Enable Cam";
+            toast(videoTrack.enabled ? "Camera Enabled" : "Camera Muted");
+          }
+        } else {
+          toast("Toggle Camera (Call active)");
+        }
+      });
+    }
+
+    if(endCallBtn){
+      endCallBtn.addEventListener('click', ()=>{
+        if(localStream){
+          localStream.getTracks().forEach(track => track.stop());
+          localStream = null;
+          localVideo.srcObject = null;
+        }
+        if(statusText) statusText.textContent = "Status: Call Ended";
+        toast("Call ended");
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost();
+    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initWebRTCCalls();
     document.body.classList.add('ready');
   });
 })();
