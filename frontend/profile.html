@@ -1,1 +1,156 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Profile | BoundUp</title><meta name="theme-color" content="#ff6b00"><link rel="manifest" href="manifest.json"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="css/style.css"><script defer src="js/data.js"></script><script defer src="js/app.js"></script></head><body class=""><div class="bg-orbs"></div><div class="shell"><main class="main"><section class="page fade-up"><section class="profile-card glass"><div class="profile-cover"></div><div class="profile-info"><div class="profile-head"><img class="avatar lg" src="assets/avatar-1.svg"><div><h1 style="font-size:44px;margin:0;letter-spacing:-.06em">Sam Bound</h1><p class="muted">@itz_sam • Dreamer • Gamer • Creator</p></div><a class="primary-btn" href="settings.html">Edit Profile</a></div><div class="stats"><span class="stat">86 Posts</span><span class="stat">1.2K Followers</span><span class="stat">256 Following</span><span class="stat">🔥 Gaming Aura</span><span class="stat">🎧 Music Aura</span></div></div><div class="tabs"><button class="tab active">Posts</button><button class="tab">Reels</button><button class="tab">Tagged</button><button class="tab">Saved</button></div></section><div id="profileGrid" class="grid" style="margin-top:12px"></div></section></main></div></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile | BoundUp</title>
+  <meta name="theme-color" content="#ff6b00">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/logo-icon.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/soundEngine.js"></script>
+  <script defer src="js/data.js"></script>
+  <script defer src="js/pwaInstall.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div class="bg-orbs"></div>
+  <div class="shell">
+    <main class="main">
+      <section class="page fade-up">
+        <!-- Main Profile Header Card -->
+        <section class="profile-card glass glow-card">
+          <div class="profile-cover" id="profileCoverBg" style="background-size:cover;background-position:center;"></div>
+          <div class="profile-info">
+            <div class="profile-head">
+              <img class="avatar lg" id="profileAvatarImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Profile Avatar">
+              <div style="flex:1">
+                <h1 style="font-size:38px;margin:0;letter-spacing:-.06em" id="profileNameDisplay">Sam Bound</h1>
+                <p class="muted" id="profileHandleBio" style="margin:4px 0 0">@itz_sam • Dreamer • Gamer • Creator 🚀</p>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px;" id="profileCategoryBadge">
+                  <span class="pill" style="background:rgba(255,107,0,0.15);color:var(--brand);font-weight:900;" id="profileCategoryText">🚀 Creator</span>
+                </div>
+              </div>
+              <button type="button" class="primary-btn" id="openEditProfileBtn" style="font-size:14px">⚙️ Edit Profile</button>
+            </div>
+
+            <!-- Profile Anthem Track Play Bar -->
+            <div class="profile-anthem-bar" id="profileAnthemBar" style="margin-top:18px;background:var(--panel2);padding:12px 18px;border-radius:999px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="sound-wave-icon"><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span></div>
+                <span id="profileAnthemTitle" style="font-weight:850;font-size:14px;color:var(--text)">🎵 Profile Anthem: 💕 Kadhale Kadhale • Flute Romance</span>
+              </div>
+              <button type="button" class="ghost-btn" id="playProfileAnthemBtn" style="padding:6px 14px;font-size:13px">▶ Play Anthem</button>
+            </div>
+
+            <!-- Profile Stats Counters -->
+            <div class="stats" style="margin-top:18px;">
+              <span class="stat" id="statPostsCount">8 Posts</span>
+              <button type="button" class="stat js-open-followers" id="statFollowersCount" style="border:0;cursor:pointer">12.4K Followers</button>
+              <button type="button" class="stat js-open-following" id="statFollowingCount" style="border:0;cursor:pointer">256 Following</button>
+              <span class="stat">🔥 Gaming Aura</span>
+              <span class="stat">🎧 Music Aura</span>
+            </div>
+          </div>
+
+          <!-- Profile Tabs -->
+          <div class="tabs">
+            <button class="tab active" data-profile-tab="posts">📸 Posts</button>
+            <button class="tab" data-profile-tab="reels">🎬 Reels</button>
+            <button class="tab" data-profile-tab="anthem">🎧 Audio Anthem</button>
+            <button class="tab" data-profile-tab="saved">🔖 Saved</button>
+          </div>
+        </section>
+
+        <!-- Dynamic Profile Grid Content -->
+        <div id="profileGrid" class="grid" style="margin-top:16px"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Interactive Edit Profile Modal -->
+  <div id="editProfileModal" class="upload-modal-overlay hidden">
+    <div class="upload-card-dialog" style="max-width:540px;">
+      <div class="upload-header">
+        <h2 style="margin:0;font-size:22px;font-weight:900">Edit Profile & Concepts ⚙️</h2>
+        <button type="button" class="ghost-btn" id="closeEditProfileBtn" style="padding:4px 10px">✕</button>
+      </div>
+
+      <form id="editProfileForm" style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+        <!-- Avatar DP Upload -->
+        <div class="sound-select-row" style="align-items:center;">
+          <img id="previewEditAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--brand)">
+          <div style="flex:1">
+            <label style="font-weight:850;display:block;font-size:13px">Avatar Photo (DP)</label>
+            <input type="file" id="editAvatarFile" accept="image/*" style="margin-top:4px;font-size:12px">
+          </div>
+        </div>
+
+        <!-- Cover Banner Upload -->
+        <div>
+          <label style="font-weight:850;display:block;font-size:13px">Profile Cover Banner</label>
+          <input type="file" id="editCoverFile" accept="image/*" style="margin-top:4px;font-size:12px">
+        </div>
+
+        <!-- Name & Username -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-weight:850;display:block;font-size:13px">Full Name</label>
+            <input type="text" id="editNameInput" class="search" placeholder="Sam Bound" required style="width:100%">
+          </div>
+          <div>
+            <label style="font-weight:850;display:block;font-size:13px">Username (@)</label>
+            <input type="text" id="editUsernameInput" class="search" placeholder="itz_sam" required style="width:100%">
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div>
+          <label style="font-weight:850;display:block;font-size:13px">Bio Description</label>
+          <textarea id="editBioInput" class="search" rows="2" placeholder="Dreamer • Gamer • Creator 🚀" style="width:100%;border-radius:14px"></textarea>
+        </div>
+
+        <!-- Profile Category Concept -->
+        <div>
+          <label style="font-weight:850;display:block;font-size:13px">Profile Category</label>
+          <select id="editCategorySelect" class="search" style="width:100%">
+            <option value="🚀 Creator">🚀 Creator</option>
+            <option value="🎵 Music & Songs">🎵 Music & Songs</option>
+            <option value="🎮 Gaming Aura">🎮 Gaming Aura</option>
+            <option value="💻 Tech & AI">💻 Tech & AI</option>
+            <option value="🎨 Digital Artist">🎨 Digital Artist</option>
+          </select>
+        </div>
+
+        <!-- Tamil BGM Anthem Song Selector -->
+        <div>
+          <label style="font-weight:850;display:block;font-size:13px">🎵 Profile Anthem Song</label>
+          <select id="editAnthemSelect" class="search" style="width:100%">
+            <option value="💕 Kadhale Kadhale • Flute Romance">💕 Kadhale Kadhale • Real Flute Song</option>
+            <option value="💕 Nira Nira • Acoustic Sunset">💕 Nira Nira • Real Acoustic Song</option>
+            <option value="💕 Kannazhaga • Soft Violin">💕 Kannazhaga • Real Violin Song</option>
+            <option value="💕 Anbae Anbae • Piano Romance">💕 Anbae Anbae • Real Piano Romance</option>
+            <option value="🔥 Tamil Mass BGM Drop">🔥 Tamil Mass BGM Drop</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+          <button type="button" class="ghost-btn" id="cancelEditProfileBtn">Cancel</button>
+          <button type="submit" class="primary-btn">Save Profile Changes 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Followers Modal Dialog -->
+  <div id="followersModal" class="upload-modal-overlay hidden">
+    <div class="upload-card-dialog" style="max-width:420px;">
+      <div class="upload-header">
+        <h3 style="margin:0;font-size:20px;font-weight:900">Followers</h3>
+        <button type="button" class="ghost-btn" id="closeFollowersBtn" style="padding:4px 10px">✕</button>
+      </div>
+      <div id="followersListContainer" style="display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:380px;overflow:auto"></div>
+    </div>
+  </div>
+</body>
+</html>

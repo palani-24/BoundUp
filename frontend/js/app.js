@@ -822,9 +822,195 @@
     const pct=$('#splashPct'), bar=$('#splashBar'); if(!pct) return; let n=0; const timer=setInterval(()=>{n+=2; pct.textContent=n+'%'; if(bar) bar.style.width=n+'%'; if(n>=100){clearInterval(timer); setTimeout(()=>location.href='welcome.html',450)}},40);
   }
 
+  /* ADVANCED PROFILE & EDIT PROFILE CONTROLLER */
+  function getStoredProfile(){
+    const defaultProfile = {
+      name: 'Sam Bound',
+      username: 'itz_sam',
+      bio: 'Dreamer • Gamer • Creator 🚀',
+      category: '🚀 Creator',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+      anthem: '💕 Kadhale Kadhale • Flute Romance',
+      anthemSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3'
+    };
+    return Object.assign(defaultProfile, store.json('user_profile', {}));
+  }
+
   function renderProfile(){
-    const grid=$('#profileGrid'); if(grid) grid.innerHTML=D.posts.map(p=>`<a class="grid-card" data-info="${p.tag}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
-    $$('.tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.tab').forEach(x=>x.classList.remove('active')); tab.classList.add('active'); toast(tab.textContent.trim()+' opened');}));
+    const grid = $('#profileGrid');
+    const profile = getStoredProfile();
+
+    const avatarImg = $('#profileAvatarImg');
+    const nameEl = $('#profileNameDisplay');
+    const handleBioEl = $('#profileHandleBio');
+    const catTextEl = $('#profileCategoryText');
+    const coverBg = $('#profileCoverBg');
+    const anthemTitleEl = $('#profileAnthemTitle');
+
+    if(avatarImg) avatarImg.src = profile.avatar;
+    if(nameEl) nameEl.textContent = profile.name;
+    if(handleBioEl) handleBioEl.textContent = `@${profile.username} • ${profile.bio}`;
+    if(catTextEl) catTextEl.textContent = profile.category || '🚀 Creator';
+    if(coverBg) coverBg.style.backgroundImage = `url('${profile.cover}')`;
+    if(anthemTitleEl) anthemTitleEl.textContent = `🎵 Profile Anthem: ${profile.anthem}`;
+
+    // Profile Anthem Song Player
+    const anthemBtn = $('#playProfileAnthemBtn');
+    if(anthemBtn){
+      anthemBtn.addEventListener('click', ()=>{
+        if(window.BoundUpSound){
+          window.BoundUpSound.playRealSongTrack(profile.anthemSrc, 'love');
+          toast(`Playing Anthem: ${profile.anthem}`);
+        }
+      });
+    }
+
+    // Followers & Following Modals
+    const openFollowersBtn = $('#statFollowersCount');
+    const openFollowingBtn = $('#statFollowingCount');
+    const followersModal = $('#followersModal');
+    const closeFollowersBtn = $('#closeFollowersBtn');
+    const container = $('#followersListContainer');
+
+    const sampleFollowers = [
+      { name: 'Riya Music', username: 'riya.vibe', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80' },
+      { name: 'Arun Gaming', username: 'arun_gaming', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80' },
+      { name: 'Nila Voice', username: 'nila_voice', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80' },
+      { name: 'Karthik Motion', username: 'karthik_fx', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80' }
+    ];
+
+    const showFollowers = (title) => {
+      if(!followersModal || !container) return;
+      $('.upload-header h3', followersModal).textContent = title;
+      container.innerHTML = sampleFollowers.map(u=>`
+        <div class="follower-user-item">
+          <img src="${u.avatar}" alt="${u.name}">
+          <div style="flex:1">
+            <b>${u.name}</b>
+            <small style="display:block;color:var(--muted)">@${u.username}</small>
+          </div>
+          <button class="follow-btn following">Following</button>
+        </div>
+      `).join('');
+      followersModal.classList.remove('hidden');
+    };
+
+    if(openFollowersBtn) openFollowersBtn.addEventListener('click', ()=> showFollowers('Followers (12.4K)'));
+    if(openFollowingBtn) openFollowingBtn.addEventListener('click', ()=> showFollowers('Following (256)'));
+    if(closeFollowersBtn) closeFollowersBtn.addEventListener('click', ()=> followersModal.classList.add('hidden'));
+
+    // Profile Tabs
+    if(grid){
+      const renderTabGrid = (tabKey) => {
+        if(tabKey === 'reels'){
+          const reels = store.json('custom_reels', []).concat(D.reels);
+          grid.innerHTML = reels.map(r=>`<a class="grid-card tall" data-info="🎬 ${r.views} views" href="reels.html"><img src="${r.img}"></a>`).join('');
+        } else if(tabKey === 'saved'){
+          const savedIds = store.json('saved', [101, 102]);
+          const posts = D.posts.filter(p => savedIds.includes(p.id));
+          grid.innerHTML = (posts.length ? posts : D.posts.slice(0, 3)).map(p => `<a class="grid-card" data-info="🔖 Saved" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
+        } else if(tabKey === 'anthem'){
+          grid.innerHTML = `
+            <div class="glass" style="grid-column:1/-1;padding:32px;text-align:center;border-radius:24px;">
+              <div class="sound-wave-icon" style="margin:0 auto 14px;"><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span><span style="background:var(--brand)"></span></div>
+              <h2 style="margin:0;font-size:24px;font-weight:900">${profile.anthem}</h2>
+              <p style="color:var(--muted);margin:8px 0 18px">Active Profile Anthem Song • Playing on profile visits</p>
+              <button type="button" class="primary-btn" id="tabPlayAnthemBtn">▶ Play Real Song Audio</button>
+            </div>
+          `;
+          $('#tabPlayAnthemBtn')?.addEventListener('click', ()=>{
+            if(window.BoundUpSound) window.BoundUpSound.playRealSongTrack(profile.anthemSrc, 'love');
+          });
+        } else {
+          const customPosts = store.json('custom_posts', []);
+          const allPosts = [...customPosts, ...D.posts];
+          grid.innerHTML = allPosts.map(p => `<a class="grid-card" data-info="♡ ${(p.likes||100).toLocaleString()}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
+        }
+      };
+
+      renderTabGrid('posts');
+
+      $$('.tab', document).forEach(tab => {
+        tab.addEventListener('click', () => {
+          $$('.tab', document).forEach(x => x.classList.remove('active'));
+          tab.classList.add('active');
+          const tabKey = tab.dataset.profileTab || 'posts';
+          renderTabGrid(tabKey);
+        });
+      });
+    }
+  }
+
+  function initEditProfileModal(){
+    const openBtn = $('#openEditProfileBtn');
+    const modal = $('#editProfileModal');
+    const closeBtn = $('#closeEditProfileBtn');
+    const cancelBtn = $('#cancelEditProfileBtn');
+    const form = $('#editProfileForm');
+
+    if(!modal || !form) return;
+
+    if(openBtn) openBtn.addEventListener('click', () => {
+      const p = getStoredProfile();
+      if($('#editNameInput')) $('#editNameInput').value = p.name || '';
+      if($('#editUsernameInput')) $('#editUsernameInput').value = p.username || '';
+      if($('#editBioInput')) $('#editBioInput').value = p.bio || '';
+      if($('#editCategorySelect')) $('#editCategorySelect').value = p.category || '🚀 Creator';
+      if($('#editAnthemSelect')) $('#editAnthemSelect').value = p.anthem || '💕 Kadhale Kadhale • Flute Romance';
+      if($('#previewEditAvatar')) $('#previewEditAvatar').src = p.avatar;
+      modal.classList.remove('hidden');
+    });
+
+    if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    if(cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+    let newAvatarUrl = null;
+    let newCoverUrl = null;
+
+    $('#editAvatarFile')?.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          newAvatarUrl = evt.target.result;
+          if($('#previewEditAvatar')) $('#previewEditAvatar').src = newAvatarUrl;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    $('#editCoverFile')?.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          newCoverUrl = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const current = getStoredProfile();
+
+      const updated = {
+        name: $('#editNameInput')?.value.trim() || current.name,
+        username: $('#editUsernameInput')?.value.trim() || current.username,
+        bio: $('#editBioInput')?.value.trim() || current.bio,
+        category: $('#editCategorySelect')?.value || current.category,
+        anthem: $('#editAnthemSelect')?.value || current.anthem,
+        avatar: newAvatarUrl || current.avatar,
+        cover: newCoverUrl || current.cover,
+        anthemSrc: current.anthemSrc
+      };
+
+      store.setJson('user_profile', updated);
+      modal.classList.add('hidden');
+      renderProfile();
+      toast('🚀 Profile Updated Successfully!');
+    });
   }
 
   function renderSavedHistory(){
@@ -1110,7 +1296,7 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initWebRTCCalls();
+    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); initEditProfileModal(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initWebRTCCalls();
     document.body.classList.add('ready');
   });
 })();

@@ -536,6 +536,26 @@
   .features-grid-6 { grid-template-columns: 1fr; }
 }
 
-
-
-
+/* Profile Anthem & Follower Modal CSS */
+.profile-anthem-bar {
+  transition: all 0.25s ease;
+}
+.profile-anthem-bar:hover {
+  border-color: rgba(255, 107, 0, 0.45);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.12);
+}
+.follower-user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+}
+.follower-user-item img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
