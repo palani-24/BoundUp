@@ -76,12 +76,36 @@ window.BOUNDUP_DATA = {
 
   posts: [
     {
+      id: 101,
+      user: 2,
+      img: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80',
+      isVideo: true,
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      audioTrack: '💕 Kadhale Kadhale • Flute Romance BGM',
+      caption: 'Kadhale Kadhale romantic flute vibe in Tamil 🌸 Turn sound on! 💕 #TamilLoveSong #BoundUpRomance',
+      likes: 5420,
+      comments: 612,
+      tag: 'Tamil Love Song'
+    },
+    {
+      id: 102,
+      user: 8,
+      img: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80',
+      isVideo: true,
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      audioTrack: '💕 Nira Nira • Acoustic Sunset Love Track',
+      caption: 'Sunset vibes with Nira Nira acoustic melody 🌇 Tag someone special! 💕 #LoveSongs #TamilMelody',
+      likes: 4890,
+      comments: 520,
+      tag: 'Acoustic Vibe'
+    },
+    {
       id: 1,
       user: 1,
       img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
       isVideo: false,
       videoUrl: '',
-      audioTrack: 'Original Audio - Sam Bound',
+      audioTrack: '💕 Kannazhaga • Soft Violin Melody',
       caption: 'Cloudy evening + good vibe people 🧡 #BoundUp #NeonCity',
       likes: 1420,
       comments: 128,
@@ -93,7 +117,7 @@ window.BOUNDUP_DATA = {
       img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
       isVideo: true,
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      audioTrack: 'Tamil Mass BGM • Riya Music Remix 🔥',
+      audioTrack: '🔥 Tamil Mass BGM • Riya Music Remix',
       caption: 'New Tamil mass BGM mood is live! Unmute for sound 🔥 #MusicStory #TamilBGM',
       likes: 3980,
       comments: 487,
@@ -110,46 +134,37 @@ window.BOUNDUP_DATA = {
       likes: 2540,
       comments: 310,
       tag: 'Gaming'
-    },
-    {
-      id: 4,
-      user: 4,
-      img: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=1200&q=80',
-      isVideo: false,
-      videoUrl: '',
-      audioTrack: 'Voice Bubble #402 - Nila',
-      caption: 'Voice bubble stories are better than text today! Tap play sound to hear 🎙️',
-      likes: 1730,
-      comments: 152,
-      tag: 'Voice'
-    },
-    {
-      id: 5,
-      user: 5,
-      img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-      isVideo: true,
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      audioTrack: 'AI Ambient Synth Beat 3.0',
-      caption: 'AI generated caption + aura match effect preview! Check out sound quality ✨',
-      likes: 4210,
-      comments: 504,
-      tag: 'AI'
-    },
-    {
-      id: 6,
-      user: 7,
-      img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=80',
-      isVideo: true,
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-      audioTrack: 'Cinematic Cinema Score - Karthik FX',
-      caption: 'Tamil Cinema teaser visual edit complete 🎬 Sound on for full impact!',
-      likes: 5890,
-      comments: 632,
-      tag: 'Cinema'
     }
   ],
 
   reels: [
+    {
+      id: 101,
+      img: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=800&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      title: 'Kadhale Kadhale Romance 💕',
+      author: 'riya.vibe',
+      audioTrack: '💕 Kadhale Kadhale • Tamil Flute Melody',
+      views: '2.5M'
+    },
+    {
+      id: 102,
+      img: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      title: 'Nira Nira Sunset Vibe 🌅',
+      author: 'ananya_tunes',
+      audioTrack: '💕 Nira Nira • Acoustic Cut',
+      views: '1.9M'
+    },
+    {
+      id: 103,
+      img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      title: 'Kannazhaga Violin Cut 🎻',
+      author: 'karthik_fx',
+      audioTrack: '💕 Kannazhaga • Violin Romance',
+      views: '3.1M'
+    },
     {
       id: 1,
       img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
@@ -158,33 +173,6 @@ window.BOUNDUP_DATA = {
       author: 'riya.vibe',
       audioTrack: 'Riya Music - Mass Bass Drop Mix',
       views: '1.8M'
-    },
-    {
-      id: 2,
-      img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      title: 'AI Aura Edit ✨',
-      author: 'vicky.ai',
-      audioTrack: 'AI Synthwave Track #1',
-      views: '843K'
-    },
-    {
-      id: 3,
-      img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      title: 'Gaming Clutch Win 🎮',
-      author: 'arun_gaming',
-      audioTrack: 'Arun Gaming Live Mic Audio',
-      views: '2.1M'
-    },
-    {
-      id: 4,
-      img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-      title: 'Cinematic Mood Teaser 🎬',
-      author: 'karthik_fx',
-      audioTrack: 'Karthik Motion Sound Design',
-      views: '1.4M'
     }
   ],
 

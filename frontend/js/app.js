@@ -222,9 +222,16 @@
     $$('.js-sound-toggle',root).forEach(btn=>{
       btn.addEventListener('click',()=>{
         const video = btn.previousElementSibling;
+        const card = btn.closest('[data-post-id]');
+        let soundGenre = 'mass';
+        if(card){
+          const trackText = $('.audio-track-tag', card)?.textContent || '';
+          if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
+            soundGenre = 'love';
+          }
+        }
         if(video && window.BoundUpSound){
-          if(video.paused) video.play();
-          window.BoundUpSound.toggleVideoAudio(video, btn);
+          window.BoundUpSound.enableVideoSound(video, btn, soundGenre);
         }
       });
     });
@@ -266,8 +273,16 @@
     $$('.js-reel-sound-toggle',el).forEach(btn=>{
       btn.addEventListener('click',()=>{
         const video = btn.previousElementSibling;
+        const card = btn.closest('.reel-card');
+        let soundGenre = 'mass';
+        if(card){
+          const trackText = $('.audio-track-tag', card)?.textContent || '';
+          if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
+            soundGenre = 'love';
+          }
+        }
         if(video && window.BoundUpSound){
-          window.BoundUpSound.enableVideoSound(video, btn, 'mass');
+          window.BoundUpSound.enableVideoSound(video, btn, soundGenre);
         }
       });
     });
@@ -779,19 +794,28 @@
 
       const isVideo = uploadedFileType && uploadedFileType.startsWith('video/');
       const trackKey = $('#videoAudioTrackSelect')?.value || 'mass';
-      const trackMap = { mass: '🔥 Tamil Mass BGM Drop', chill: '🎧 Chill Lo-Fi Beat', original: '🎙️ Original Video Audio' };
+      const trackMap = {
+        love1: '💕 Kadhale Kadhale • Flute Romance',
+        love2: '💕 Nira Nira • Acoustic Sunset',
+        love3: '💕 Kannazhaga • Soft Violin',
+        love4: '💕 Anbae Anbae • Acoustic Cut',
+        love5: '💕 Unakkaga • Piano Romance',
+        mass: '🔥 Tamil Mass BGM Drop',
+        chill: '🎧 Chill Lo-Fi Beat',
+        original: '🎙️ Original Video Audio'
+      };
 
       const newPost = {
         id: Date.now(),
         user: 1,
-        img: isVideo ? 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80' : (uploadedMediaUrl || 'assets/post-1.svg'),
+        img: isVideo ? 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80' : (uploadedMediaUrl || 'assets/post-1.svg'),
         isVideo: isVideo,
         videoUrl: isVideo ? uploadedMediaUrl : '',
         audioTrack: isVideo ? (trackMap[trackKey] || 'Original Audio') : '',
-        caption: text || (isVideo ? 'New BoundUp Video Reel 🔥' : 'New BoundUp post'),
+        caption: text || (isVideo ? 'New BoundUp Love Reel 💕' : 'New BoundUp post'),
         likes: 1,
         comments: 0,
-        tag: isVideo ? 'Video Reel' : 'User Upload'
+        tag: isVideo ? 'Tamil Love Song' : 'User Upload'
       };
 
       const customPosts = store.json('custom_posts', []);
@@ -854,7 +878,16 @@
         const title = titleInput ? titleInput.value.trim() : '';
         const videoSrc = videoPreview && videoPreview.src ? videoPreview.src : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
         const trackKey = audioSelect ? audioSelect.value : 'mass';
-        const trackNameMap = { mass: '🔥 Tamil Mass BGM Drop', chill: '🎧 Chill Synthwave Beat', gaming: '🎮 Gamer Bass' };
+        const trackNameMap = {
+          love1: '💕 Kadhale Kadhale • Tamil Flute Melody',
+          love2: '💕 Nira Nira • Acoustic Cut',
+          love3: '💕 Kannazhaga • Violin Romance',
+          love4: '💕 Anbae Anbae • Acoustic Sunset',
+          love5: '💕 Unakkaga • Piano Romance',
+          mass: '🔥 Tamil Mass BGM Drop',
+          chill: '🎧 Chill Synthwave Beat',
+          gaming: '🎮 Gamer Bass'
+        };
 
         const newReel = {
           id: Date.now(),

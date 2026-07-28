@@ -4,7 +4,6 @@
  */
 (function(window) {
   let audioCtx = null;
-  let currentBgmOscs = [];
   let bgmInterval = null;
 
   function getAudioContext() {
@@ -113,49 +112,66 @@
       } catch (e) {}
     },
 
-    // Dynamic Tamil Mass BGM / Beat Synthesizer for video sound playback
+    // Dynamic Tamil Mass BGM & Tamil Love Song Melody Synthesizer
     playVideoMusicTrack(genre = 'mass') {
       this.stopVideoMusic();
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      const notes = genre === 'mass' 
-        ? [130.81, 146.83, 164.81, 196.00, 220.00, 261.63] // C3 pentatonic bass
-        : [261.63, 329.63, 392.00, 493.88, 523.25];       // Chill synth chords
+      // Note frequencies: Mass BGM vs Romantic Tamil Love Song chords vs Chill Synth
+      let notes = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63];
+      if (genre === 'love' || genre === 'romantic') {
+        // Soft Romantic Major 7th arpeggio (C4, E4, G4, B4, D5)
+        notes = [261.63, 329.63, 392.00, 493.88, 587.33, 523.25];
+      } else if (genre === 'chill') {
+        notes = [261.63, 293.66, 329.63, 392.00, 440.00];
+      }
 
       let step = 0;
       const playStep = () => {
         try {
           const now = ctx.currentTime;
-          const osc = ctx.createOscillator();
-          const subOsc = ctx.createOscillator();
+          const osc1 = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
           const gain = ctx.createGain();
 
           const freq = notes[step % notes.length];
-          osc.type = genre === 'mass' ? 'sawtooth' : 'sine';
-          subOsc.type = 'triangle';
+          if (genre === 'love' || genre === 'romantic') {
+            osc1.type = 'sine';
+            osc2.type = 'triangle';
+          } else if (genre === 'mass') {
+            osc1.type = 'sawtooth';
+            osc2.type = 'triangle';
+          } else {
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+          }
 
-          osc.frequency.setValueAtTime(freq, now);
-          subOsc.frequency.setValueAtTime(freq / 2, now);
+          osc1.frequency.setValueAtTime(freq, now);
+          osc2.frequency.setValueAtTime(freq / 2, now);
 
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          const vol = (genre === 'love' || genre === 'romantic') ? 0.12 : 0.16;
+          const duration = (genre === 'love' || genre === 'romantic') ? 0.45 : 0.3;
 
-          osc.connect(gain);
-          subOsc.connect(gain);
+          gain.gain.setValueAtTime(vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc1.connect(gain);
+          osc2.connect(gain);
           gain.connect(ctx.destination);
 
-          osc.start(now);
-          subOsc.start(now);
-          osc.stop(now + 0.32);
-          subOsc.stop(now + 0.32);
+          osc1.start(now);
+          osc2.start(now);
+          osc1.stop(now + duration + 0.05);
+          osc2.stop(now + duration + 0.05);
 
           step++;
         } catch(e) {}
       };
 
       playStep();
-      bgmInterval = setInterval(playStep, genre === 'mass' ? 320 : 450);
+      const tempo = (genre === 'love' || genre === 'romantic') ? 480 : (genre === 'mass' ? 320 : 420);
+      bgmInterval = setInterval(playStep, tempo);
     },
 
     stopVideoMusic() {
@@ -178,7 +194,6 @@
           playPromise.then(() => {
             this.playVideoMusicTrack(genre);
           }).catch(err => {
-            // Autoplay policy fallback: synthesize beat directly
             this.playVideoMusicTrack(genre);
           });
         }
@@ -196,7 +211,6 @@
       }
     },
 
-    // Realistic phone ringtone for incoming calls
     startRingtone() {
       this.stopRingtone();
       const playRingCycle = () => {
