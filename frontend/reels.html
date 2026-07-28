@@ -15,14 +15,59 @@
       <section class="page fade-up">
         <div class="page-title">
           <div>
-            <h1>Reels</h1>
-            <p>Vertical short videos with music, sound audio effects, and AI recommendations.</p>
+            <h1>Reels & Live Streams 🔴</h1>
+            <p>Vertical short videos with Tamil music songs, sound audio effects, and live streams.</p>
           </div>
-          <button class="primary-btn" id="openReelModalBtn">📹 Upload Reel Video</button>
+          <div style="display:flex;gap:10px">
+            <button class="ghost-btn" id="startLiveStreamBtn" style="border-color:var(--danger);color:var(--danger);font-weight:900">🔴 Start Reels Live</button>
+            <button class="primary-btn" id="openReelModalBtn">📹 Upload Reel Video</button>
+          </div>
         </div>
+
+        <!-- Music & Tamil Song Search Bar -->
+        <div class="searchbar" style="margin-bottom:20px">
+          <input type="text" id="reelSongSearchInput" placeholder="🔍 Search Tamil songs, BGM tracks, or creators (e.g. Kadhale, Nira, Violin)...">
+        </div>
+
         <div id="reelsGrid" class="reels-grid"></div>
       </section>
     </main>
+  </div>
+
+  <!-- Multi-User Reels Live Stream Modal -->
+  <div id="liveStreamModal" class="video-modal-overlay hidden">
+    <div class="video-modal-card" style="width:min(460px, 98vw);height:min(780px, 92vh);">
+      <button type="button" class="video-modal-close" id="closeLiveStreamBtn">✕</button>
+      <video id="liveWebcamVideo" class="video-modal-player" autoplay playsinline muted></video>
+
+      <!-- Live Stream Overlay Controls -->
+      <div style="position:absolute;top:18px;left:18px;z-index:20;display:flex;align-items:center;gap:10px">
+        <span class="pill live-badge-glow" style="background:var(--danger);color:white;font-weight:900">🔴 LIVE</span>
+        <span class="pill" style="background:rgba(0,0,0,0.6);color:white;font-weight:800;backdrop-filter:blur(10px)" id="liveViewerCounter">👁️ 1,420 Viewers</span>
+      </div>
+
+      <!-- Live Chat & Floating Hearts overlay -->
+      <div class="video-modal-info" style="pointer-events:auto">
+        <div class="video-modal-author">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Host">
+          <div>
+            <span><b>Sam Bound (Host)</b></span>
+            <small style="display:block;opacity:0.75">🔴 Live Streaming now on BoundUp</small>
+          </div>
+        </div>
+
+        <!-- Live Comments Chat Box -->
+        <div id="liveChatMessagesBox" style="max-height:140px;overflow:auto;margin:8px 0;display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <div><b>@riya.vibe:</b> Love this live stream! 💕</div>
+          <div><b>@arun_gaming:</b> 🔥🔥 Mass Tamil BGM vibes!</div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <input type="text" id="liveChatInput" class="search" placeholder="Send live comment..." style="background:rgba(255,255,255,0.2);color:white">
+          <button type="button" id="sendLiveHeartBtn" class="primary-btn" style="padding:10px 14px">❤️</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Interactive Upload Reel Video Modal -->

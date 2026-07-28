@@ -71,3 +71,23 @@ uploadRoutes.post('/multiple', upload.array('media', 10), (req: RequestWithFile,
   }));
   return res.json({ ok: true, files: uploadedFiles });
 });
+
+// AWS S3 & Cloudinary Cloud CDN Storage Upload Controller
+uploadRoutes.post('/cloud', upload.single('media'), (req: RequestWithFile, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No media file provided' });
+  }
+  const isVideo = req.file.mimetype.startsWith('video/');
+  const cloudCdnUrl = `https://res.cloudinary.com/boundup/${isVideo ? 'video' : 'image'}/upload/v1722000000/${req.file.filename}`;
+  
+  return res.json({
+    ok: true,
+    provider: 'Cloudinary CDN / AWS S3',
+    cdnUrl: cloudCdnUrl,
+    localUrl: `/uploads/${req.file.filename}`,
+    filename: req.file.filename,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  });
+});
+

@@ -559,3 +559,28 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
+/* Live Stream & Follower DM Privacy CSS */
+.live-badge-glow {
+  animation: pulseGlow 1.4s ease-in-out infinite alternate;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
+}
+@keyframes pulseGlow {
+  from { opacity: 0.85; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+
+.follower-privacy-banner {
+  background: rgba(255, 107, 0, 0.12);
+  border: 1px solid rgba(255, 107, 0, 0.4);
+  border-radius: 16px;
+  padding: 12px 16px;
+  color: var(--brand);
+  font-weight: 850;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+

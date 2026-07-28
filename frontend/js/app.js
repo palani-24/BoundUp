@@ -347,77 +347,180 @@
     const search=$('#globalSearch'); if(search) search.addEventListener('input',()=>{ const q=search.value.toLowerCase(); $$('.grid-card',grid).forEach((c,i)=>{ const p=D.posts[i%D.posts.length]; c.style.display=(p.caption.toLowerCase().includes(q)||p.tag.toLowerCase().includes(q))?'block':'none'; }); });
   }
 
+  /* NATIVE PUSH NOTIFICATION CONTROLLER */
+  function initPushNotifications(){
+    if('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied'){
+      Notification.requestPermission();
+    }
+  }
+
+  function triggerPushNotification(title, bodyText){
+    if('Notification' in window && Notification.permission === 'granted'){
+      try {
+        new Notification(title, {
+          body: bodyText,
+          icon: 'assets/logo-icon.png'
+        });
+      } catch(e) {}
+    }
+  }
+
+  /* MULTI-USER REELS LIVE STREAMER CONTROLLER */
+  let liveStreamMedia = null;
+  let liveViewerTimer = null;
+
+  function initReelsLiveStream(){
+    const startBtn = $('#startLiveStreamBtn');
+    const modal = $('#liveStreamModal');
+    const closeBtn = $('#closeLiveStreamBtn');
+    const videoEl = $('#liveWebcamVideo');
+    const counterEl = $('#liveViewerCounter');
+    const sendHeartBtn = $('#sendLiveHeartBtn');
+    const chatInput = $('#liveChatInput');
+    const chatBox = $('#liveChatMessagesBox');
+
+    if(!startBtn || !modal) return;
+
+    startBtn.addEventListener('click', async ()=>{
+      modal.classList.remove('hidden');
+      try {
+        liveStreamMedia = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if(videoEl) videoEl.srcObject = liveStreamMedia;
+      } catch(err) {
+        toast('Camera simulation active for Live Stream!');
+      }
+
+      let count = 1420;
+      if(liveViewerTimer) clearInterval(liveViewerTimer);
+      liveViewerTimer = setInterval(()=>{
+        count += Math.floor(Math.random() * 7) - 3;
+        if(counterEl) counterEl.textContent = `👁️ ${count.toLocaleString()} Viewers`;
+      }, 2000);
+
+      toast('🔴 You are now LIVE on BoundUp Reels!');
+      triggerPushNotification('🔴 BoundUp Live Stream Started!', 'Sam Bound is live now. Tap to watch!');
+    });
+
+    const stopLive = () => {
+      if(liveStreamMedia){
+        liveStreamMedia.getTracks().forEach(t => t.stop());
+        liveStreamMedia = null;
+      }
+      if(videoEl) videoEl.srcObject = null;
+      if(liveViewerTimer){
+        clearInterval(liveViewerTimer);
+        liveViewerTimer = null;
+      }
+      modal.classList.add('hidden');
+      toast('Live Stream ended');
+    };
+
+    if(closeBtn) closeBtn.addEventListener('click', stopLive);
+
+    if(sendHeartBtn){
+      sendHeartBtn.addEventListener('click', ()=>{
+        if(window.BoundUpSound) window.BoundUpSound.playLike();
+        toast('❤️ Live Reaction Sent!');
+      });
+    }
+
+    if(chatInput && chatBox){
+      chatInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' && chatInput.value.trim()){
+          const msg = chatInput.value.trim();
+          chatBox.insertAdjacentHTML('beforeend', `<div><b>@you:</b> ${msg}</div>`);
+          chatInput.value = '';
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      });
+    }
+  }
+
   function renderReels(){
     const el=$('#reelsGrid'); if(!el) return;
+    const searchInput = $('#reelSongSearchInput');
     const customReels = store.json('custom_reels', []);
-    const allReels = [...customReels, ...D.reels];
+    let allReels = [...customReels, ...D.reels];
 
-    el.innerHTML=allReels.map(r=>`<article class="reel-card">
-      <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;cursor:pointer"></video>
-      <button class="video-sound-btn js-reel-sound-toggle" style="top:14px;bottom:auto;right:14px;">🔇</button>
-      <div class="reel-overlay">
-        <b>${r.title}</b>
-        <div class="audio-track-tag" style="color:white;margin:4px 0;">
-          <div class="sound-wave-icon"><span style="background:white"></span><span style="background:white"></span><span style="background:white"></span></div>
-          <span>${r.audioTrack || 'Original Audio'}</span>
+    const drawGrid = (reelsList) => {
+      el.innerHTML=reelsList.map(r=>`<article class="reel-card">
+        <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;cursor:pointer"></video>
+        <button class="video-sound-btn js-reel-sound-toggle" style="top:14px;bottom:auto;right:14px;">🔇</button>
+        <div class="reel-overlay">
+          <b>${r.title}</b>
+          <div class="audio-track-tag" style="color:white;margin:4px 0;">
+            <div class="sound-wave-icon"><span style="background:white"></span><span style="background:white"></span><span style="background:white"></span></div>
+            <span>${r.audioTrack || 'Original Audio'}</span>
+          </div>
+          <div>${r.views} views • @${r.author || 'itz_sam'}</div>
+          <div class="icon-row" style="margin-top:8px;">
+            <button class="icon-btn js-reel-like">♡</button>
+            <button class="icon-btn js-share">↗</button>
+          </div>
         </div>
-        <div>${r.views} views • @${r.author || 'itz_sam'}</div>
-        <div class="icon-row" style="margin-top:8px;">
-          <button class="icon-btn js-reel-like">♡</button>
-          <button class="icon-btn js-share">↗</button>
-        </div>
-      </div>
-    </article>`).join('');
+      </article>`).join('');
 
-    $$('.reel-card', el).forEach((card, idx)=>{
-      card.addEventListener('click', (e)=>{
-        if(e.target.classList.contains('js-reel-sound-toggle') || e.target.classList.contains('js-reel-like') || e.target.classList.contains('js-share')) return;
-        const customReels = store.json('custom_reels', []);
-        const allReels = [...customReels, ...D.reels];
-        const reel = allReels[idx];
-        if(reel){
-          openVideoPlayerModal({
-            avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
-            name: reel.author || 'Reel Creator',
-            username: reel.author || 'creator',
-            caption: reel.title,
-            audioTrack: reel.audioTrack,
-            audioSrc: reel.audioSrc,
-            videoUrl: reel.videoUrl
-          });
-        }
-      });
-    });
-
-    $$('.js-reel-sound-toggle',el).forEach((btn, idx)=>{
-      btn.addEventListener('click',(e)=>{
-        e.stopPropagation();
-        const video = btn.previousElementSibling;
-        const card = btn.closest('.reel-card');
-        let soundGenre = 'mass';
-        let audioSrc = null;
-        const customReels = store.json('custom_reels', []);
-        const allReels = [...customReels, ...D.reels];
-        if(allReels[idx]) audioSrc = allReels[idx].audioSrc;
-
-        if(card){
-          const trackText = $('.audio-track-tag', card)?.textContent || '';
-          if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
-            soundGenre = 'love';
+      $$('.reel-card', el).forEach((card, idx)=>{
+        card.addEventListener('click', (e)=>{
+          if(e.target.classList.contains('js-reel-sound-toggle') || e.target.classList.contains('js-reel-like') || e.target.classList.contains('js-share')) return;
+          const reel = reelsList[idx];
+          if(reel){
+            openVideoPlayerModal({
+              avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+              name: reel.author || 'Reel Creator',
+              username: reel.author || 'creator',
+              caption: reel.title,
+              audioTrack: reel.audioTrack,
+              audioSrc: reel.audioSrc,
+              videoUrl: reel.videoUrl
+            });
           }
-        }
-        if(video && window.BoundUpSound){
-          window.BoundUpSound.enableVideoSound(video, btn, soundGenre, audioSrc);
-        }
+        });
       });
-    });
 
-    $$('.js-reel-like',el).forEach(b=>b.addEventListener('click',()=>{
-      b.textContent=b.textContent==='♡'?'♥':'♡';
-      b.classList.toggle('liked');
-      if(window.BoundUpSound && b.classList.contains('liked')) window.BoundUpSound.playLike();
-    }));
-    $$('.js-share',el).forEach(b=>b.addEventListener('click',()=>toast('Reel link copied')));
+      $$('.js-reel-sound-toggle',el).forEach((btn, idx)=>{
+        btn.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          const video = btn.previousElementSibling;
+          const card = btn.closest('.reel-card');
+          let soundGenre = 'mass';
+          let audioSrc = null;
+          if(reelsList[idx]) audioSrc = reelsList[idx].audioSrc;
+
+          if(card){
+            const trackText = $('.audio-track-tag', card)?.textContent || '';
+            if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
+              soundGenre = 'love';
+            }
+          }
+          if(video && window.BoundUpSound){
+            window.BoundUpSound.enableVideoSound(video, btn, soundGenre, audioSrc);
+          }
+        });
+      });
+
+      $$('.js-reel-like',el).forEach(b=>b.addEventListener('click',()=>{
+        b.textContent=b.textContent==='♡'?'♥':'♡';
+        b.classList.toggle('liked');
+        if(window.BoundUpSound && b.classList.contains('liked')) window.BoundUpSound.playLike();
+      }));
+      $$('.js-share',el).forEach(b=>b.addEventListener('click',()=>toast('Reel link copied')));
+    };
+
+    drawGrid(allReels);
+
+    if(searchInput){
+      searchInput.addEventListener('input', ()=>{
+        const query = searchInput.value.toLowerCase().trim();
+        const filtered = allReels.filter(r => 
+          (r.title && r.title.toLowerCase().includes(query)) ||
+          (r.audioTrack && r.audioTrack.toLowerCase().includes(query)) ||
+          (r.author && r.author.toLowerCase().includes(query))
+        );
+        drawGrid(filtered);
+      });
+    }
+  }
   }
 
 
@@ -1296,7 +1399,7 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); initEditProfileModal(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initWebRTCCalls();
+    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); initEditProfileModal(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initPushNotifications(); initReelsLiveStream(); initWebRTCCalls();
     document.body.classList.add('ready');
   });
 })();
