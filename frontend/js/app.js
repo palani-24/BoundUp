@@ -65,7 +65,18 @@
     }));
   }
 
+  function isLoggedIn(){
+    const u = store.get('user');
+    return !!(u && u !== '' && u !== 'guest');
+  }
+
   function openStoryViewer(index){
+    if(!isLoggedIn()){
+      toast('🔒 Please login to view Stories!');
+      setTimeout(()=> location.href = 'login.html', 900);
+      return;
+    }
+
     currentStoryIndex = index;
     const modal = $('#storyViewerModal');
     if(!modal) return;
@@ -532,14 +543,32 @@
     const form=$('#chatForm'), input=$('#chatInput'), thread=$('#thread');
     if(!form || !thread) return;
 
+    if(!isLoggedIn()){
+      const chatShell = $('.chat-shell');
+      if(chatShell){
+        chatShell.innerHTML = `
+          <div class="glass glow-card" style="grid-column:1/-1;padding:50px 24px;text-align:center;margin:40px auto;max-width:520px;border-radius:28px;">
+            <div style="font-size:54px;margin-bottom:14px;">🔐</div>
+            <h2 style="font-size:28px;font-weight:900;margin:0 0 10px;">Messages Restricted</h2>
+            <p style="color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:24px;">Please login to your BoundUp account to access private chats, send messages, and view message requests.</p>
+            <div style="display:flex;gap:12px;justify-content:center;">
+              <a class="primary-btn" href="login.html" style="padding:14px 28px;">Login to Chat 🚀</a>
+              <a class="ghost-btn" href="welcome.html" style="padding:14px 24px;">Learn More</a>
+            </div>
+          </div>
+        `;
+      }
+      toast('🔒 Please login to access Messages!');
+      return;
+    }
+
     let activeTab = 'primary'; // 'primary' | 'requests'
     let currentUser = store.get('chat_user') || 'itz_sam';
     let targetContactId = 'riya_music';
     let socket = null;
 
-    // Contact Metadata registry
+    // Contact Metadata registry (Real creators only)
     const allUsers = {
-      'ai': { handle: 'ai', name: 'BoundUp AI Assistant', avatar: 'assets/avatar-1.svg', status: 'Online • AI Bot', accepted: true },
       'itz_sam': { handle: 'itz_sam', name: 'Sam Bound', avatar: 'assets/avatar-1.svg', status: 'Online (You)', accepted: true },
       'riya_music': { handle: 'riya_music', name: 'Riya Music', avatar: 'assets/avatar-2.svg', status: 'Online • Tamil BGM Creator', accepted: true },
       'arun_gaming': { handle: 'arun_gaming', name: 'Arun Gaming', avatar: 'assets/avatar-3.svg', status: 'Online • Streamer', accepted: true },
@@ -1043,6 +1072,44 @@
           tab.classList.add('active');
           const tabKey = tab.dataset.profileTab || 'posts';
           renderTabGrid(tabKey);
+        });
+      });
+    }
+
+    // Render Suggested Creators Section on Profile
+    const suggestionsContainer = $('#profileSuggestionsContainer');
+    if(suggestionsContainer){
+      const suggestedUsers = [
+        { name: 'Riya Music', username: 'riya.vibe', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', info: '🎵 Tamil BGM Creator' },
+        { name: 'Arun Gaming', username: 'arun_gaming', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', info: '🎮 Live Streamer' },
+        { name: 'Nila Voice', username: 'nila_voice', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80', info: '🎙️ Voice & Songs' }
+      ];
+
+      suggestionsContainer.innerHTML = suggestedUsers.map(u => `
+        <div class="feature-card glass" style="text-align:center;padding:18px;">
+          <img class="avatar" src="${u.avatar}" style="width:70px;height:70px;margin:0 auto 10px;display:block;border:2px solid var(--brand)">
+          <b style="display:block;font-size:16px">${u.name}</b>
+          <small style="color:var(--muted);display:block;margin:4px 0 12px">@${u.username} • ${u.info}</small>
+          <button type="button" class="primary-btn js-profile-follow-btn" style="width:100%;padding:9px 14px;font-size:13px">Follow</button>
+        </div>
+      `).join('');
+
+      $$('.js-profile-follow-btn', suggestionsContainer).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const isFollowing = btn.classList.contains('following');
+          if(isFollowing){
+            btn.classList.remove('following');
+            btn.textContent = 'Follow';
+            btn.style.background = 'linear-gradient(135deg, var(--brand), #ff3d00)';
+            toast('Unfollowed user');
+          } else {
+            btn.classList.add('following');
+            btn.textContent = 'Following ✓';
+            btn.style.background = 'var(--panel2)';
+            btn.style.color = 'var(--muted)';
+            toast('Following user! ✨');
+            if(window.BoundUpSound) window.BoundUpSound.playLike();
+          }
         });
       });
     }
