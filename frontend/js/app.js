@@ -521,7 +521,6 @@
       });
     }
   }
-  }
 
 
   /* FULL REAL-TIME MULTI-ACCOUNT CHAT & MESSAGE REQUEST SYSTEM */
