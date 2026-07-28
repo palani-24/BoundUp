@@ -103,18 +103,30 @@
   /* Interactive Story Viewer Modal */
   let currentStoryIndex = 0;
 
-  function renderStories(){
-    const el=$('#stories'); if(!el) return;
+  function getDeduplicatedStories(){
     const customStories = store.json('custom_stories', []);
     const userProf = getStoredProfile();
     const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
-    const voiceRoomStory = { isVoiceRoom: true, name: 'Tamil BGM Room', username: 'voice_space', avatar: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' };
-    const allUsers = [myStory, voiceRoomStory, ...customStories, ...D.users];
+    
+    const storyMap = new Map();
+    storyMap.set(myStory.username, myStory);
+
+    customStories.forEach(s => {
+      const uname = s.username || s.name;
+      if(uname && !storyMap.has(uname)) storyMap.set(uname, s);
+    });
+
+    return Array.from(storyMap.values());
+  }
+
+  function renderStories(){
+    const el=$('#stories'); if(!el) return;
+    const allUsers = getDeduplicatedStories();
     el.innerHTML = allUsers.map((u, i)=>`<div class="story js-story-open" data-index="${i}" style="cursor:pointer">
-      <div class="story-ring ${u.isCustom ? 'live-badge-glow' : u.isVoiceRoom ? 'live-badge-glow' : ''}">
+      <div class="story-ring ${u.isCustom ? 'live-badge-glow' : ''}">
         <img src="${u.avatar}" alt="${u.name}">
       </div>
-      <small>${u.isVoiceRoom ? '🎙️ Voice Room' : (u.username || u.name)}</small>
+      <small>${u.username || u.name}</small>
     </div>`).join('');
     $$('.js-story-open').forEach(btn => btn.addEventListener('click', () => {
       openStoryViewer(Number(btn.dataset.index));
@@ -136,11 +148,7 @@
     currentStoryIndex = index;
     const modal = $('#storyViewerModal');
     if(!modal) return;
-    const customStories = store.json('custom_stories', []);
-    const userProf = getStoredProfile();
-    const myStory = { isCustom: true, name: 'Your Story', username: userProf.username, avatar: userProf.avatar };
-    const voiceRoomStory = { isVoiceRoom: true, name: 'Tamil BGM Room', username: 'voice_space', avatar: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' };
-    const allUsers = [myStory, voiceRoomStory, ...customStories, ...D.users];
+    const allUsers = getDeduplicatedStories();
     const user = allUsers[currentStoryIndex] || allUsers[0];
     const imgEl = $('#storyImg');
     const avatarEl = $('#storyAvatar');
@@ -148,7 +156,7 @@
 
     if(imgEl) imgEl.src = user.storyImg || D.posts[currentStoryIndex % D.posts.length]?.img || user.avatar;
     if(avatarEl) avatarEl.src = user.avatar;
-    if(userEl) userEl.innerHTML = `<b>${user.username || user.name}</b> ${user.isVoiceRoom ? '🎙️ Voice Room' : ''} <small style="opacity:0.7">${user.name || ''}</small>`;
+    if(userEl) userEl.innerHTML = `<b>${user.username || user.name}</b> <small style="opacity:0.7">${user.name || ''}</small>`;
     
     modal.classList.remove('hidden');
     startStoryProgress();
@@ -253,29 +261,43 @@
 
   function renderFeed(){
     const el=$('#feed'); if(!el) return;
+    if(!isLoggedIn()){ el.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto"><div style="font-size:52px;margin-bottom:16px">🔐</div><h2 style="font-weight:900;margin:0 0 10px">Login Required</h2><p style="color:var(--muted);margin-bottom:24px">Login to your BoundUp account to see your personalized feed.</p><a class="primary-btn" href="login.html" style="padding:14px 28px">Login Now 🚀</a></div>`; return; }
     const customPosts = store.json('custom_posts', []);
-    const allPosts = [...customPosts, ...D.posts];
-    el.innerHTML=allPosts.map(postHtml).join('');
+    if(customPosts.length === 0){
+      el.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto"><div style="font-size:52px;margin-bottom:16px">📸</div><h2 style="font-weight:900;margin:0 0 10px">Your Feed is Empty</h2><p style="color:var(--muted);margin-bottom:24px">Start by creating your first post, reel, or story to share with the BoundUp community!</p><a class="primary-btn" href="creator.html" style="padding:14px 28px">Create Post ✨</a></div>`;
+      return;
+    }
+    el.innerHTML=customPosts.map(postHtml).join('');
     bindPostActions(el);
   }
 
   function renderRightPanel(){
     const el=$('#rightPanel'); if(!el) return;
     const mainUser = getStoredProfile();
+    const allReg = getRegisteredUsers();
+    const registeredList = Object.keys(allReg).map(k => allReg[k]).filter(u => u.username !== mainUser.username);
+
     el.innerHTML=`<div class="side-card glass">
       <div class="profile-mini">
         <img class="avatar" src="${mainUser.avatar}">
         <div><b>${mainUser.name}</b><div class="muted">@${mainUser.username}</div></div>
         <a class="switch" href="profile.html">View</a>
       </div>
-      <h3 data-i18n="suggestions">${t.suggestions||'Suggested for you'}</h3>
-      ${D.users.slice(1,6).map(u=>`<div class="suggestion"><img class="avatar" src="${u.avatar}"><div><b>${u.name}</b><div class="muted">${u.followers} followers</div></div><button class="follow-btn js-follow">Follow</button></div>`).join('')}
+      <h3>${t.suggestions||'Registered Creators'}</h3>
+      ${registeredList.length === 0
+        ? `<p class="muted" style="font-size:13px;padding:8px 0">No other creators yet. Invite friends to join BoundUp!</p>`
+        : registeredList.slice(0, 5).map(u=>`<div class="suggestion">
+        <a href="profile.html?user=${encodeURIComponent(u.username)}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;">
+          <img class="avatar" src="${u.avatar}">
+          <div><b>${u.name}</b><div class="muted">@${u.username}</div></div>
+        </a>
+        <a class="follow-btn" href="profile.html?user=${encodeURIComponent(u.username)}" style="text-decoration:none;font-size:12px;">View</a>
+      </div>`).join('')}
     </div>
     <div class="side-card glass">
-      <h3 data-i18n="trending">${t.trending||'Trending on BoundUp'}</h3>
-      ${['#TamilBGM','#MoodMatch','#AIFeed','#CreatorRoom','#GamingAura','#VoiceBubble'].map(x=>`<span class="trend-tag">${x}</span>`).join('')}
+      <h3>${t.trending||'Trending on BoundUp'}</h3>
+      ${['#TamilBGM','#ReelsLove','#MassBGM','#CreatorSpace','#GamingAura','#VoiceEdit'].map(x=>`<span class="trend-tag">${x}</span>`).join('')}
     </div>`;
-    $$('.js-follow',el).forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('following');btn.textContent=btn.classList.contains('following')?'Following':'Follow';toast(btn.textContent)}));
   }
 
   /* FULL-SCREEN INTERACTIVE VIDEO & REAL SONG PLAYER MODAL */
@@ -420,7 +442,13 @@
 
   function renderExplore(){
     const grid=$('#exploreGrid'); if(!grid) return;
-    grid.innerHTML=[...D.posts,...D.posts].map((p,i)=>`<a class="grid-card" data-info="♡ ${(p.likes+i*20).toLocaleString()} • 💬 ${p.comments+i}" href="home.html#post-${p.id}"><img src="${p.img}" alt="${p.tag}"></a>`).join('');
+    if(!isLoggedIn()){ grid.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto;grid-column:1/-1"><div style="font-size:52px;margin-bottom:16px">🔐</div><h2 style="font-weight:900;margin:0 0 10px">Login Required</h2><p style="color:var(--muted);margin-bottom:24px">Login to explore posts, videos and connect with registered creators.</p><a class="primary-btn" href="login.html" style="padding:14px 28px">Login Now 🚀</a></div>`; return; }
+    const customPosts = store.json('custom_posts', []);
+    if(customPosts.length === 0){
+      grid.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto;grid-column:1/-1"><div style="font-size:52px;margin-bottom:16px">🌐</div><h2 style="font-weight:900;margin:0 0 10px">Explore is Empty</h2><p style="color:var(--muted);margin-bottom:24px">No posts yet. Be the first to create something amazing!</p><a class="primary-btn" href="creator.html" style="padding:14px 28px">Create Post ✨</a></div>`;
+    } else {
+      grid.innerHTML=customPosts.map((p,i)=>`<a class="grid-card" data-info="♡ ${p.likes||0} • 💬 ${p.comments||0}" href="home.html"><img src="${p.img||p.videoUrl||'assets/logo-icon.png'}" alt="${p.caption||'Post'}"></a>`).join('');
+    }
     
     const search=$('#globalSearch');
     const userResultsContainer = $('#userSearchResults');
@@ -561,9 +589,11 @@
 
   function renderReels(){
     const el=$('#reelsGrid'); if(!el) return;
+    if(!isLoggedIn()){ el.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto;grid-column:1/-1"><div style="font-size:52px;margin-bottom:16px">🔐</div><h2 style="font-weight:900;margin:0 0 10px">Login Required</h2><p style="color:var(--muted);margin-bottom:24px">Login to watch reels and videos from the BoundUp community.</p><a class="primary-btn" href="login.html" style="padding:14px 28px">Login Now 🚀</a></div>`; return; }
     const searchInput = $('#reelSongSearchInput');
     const customReels = store.json('custom_reels', []);
-    let allReels = [...customReels, ...D.reels];
+    if(customReels.length === 0){ el.innerHTML=`<div class="glass glow-card" style="padding:60px 24px;text-align:center;border-radius:28px;max-width:480px;margin:40px auto;grid-column:1/-1"><div style="font-size:52px;margin-bottom:16px">🎬</div><h2 style="font-weight:900;margin:0 0 10px">No Reels Yet</h2><p style="color:var(--muted);margin-bottom:24px">Upload your first HD Reel and let it go viral on BoundUp!</p><a class="primary-btn" href="creator.html" style="padding:14px 28px">Upload Reel ✨</a></div>`; return; }
+    let allReels = [...customReels];
 
     const drawGrid = (reelsList) => {
       el.innerHTML=reelsList.map(r=>`<article class="reel-card">
@@ -1225,31 +1255,29 @@
     const closeFollowersBtn = $('#closeFollowersBtn');
     const container = $('#followersListContainer');
 
-    const sampleFollowers = [
-      { name: 'Riya Music', username: 'riya.vibe', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80' },
-      { name: 'Arun Gaming', username: 'arun_gaming', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80' },
-      { name: 'Nila Voice', username: 'nila_voice', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80' },
-      { name: 'Karthik Motion', username: 'karthik_fx', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80' }
-    ];
-
     const showFollowers = (title) => {
       if(!followersModal || !container) return;
-      $('.upload-header h3', followersModal).textContent = title;
-      container.innerHTML = sampleFollowers.map(u=>`
-        <div class="follower-user-item">
-          <img src="${u.avatar}" alt="${u.name}">
-          <div style="flex:1">
-            <b>${u.name}</b>
-            <small style="display:block;color:var(--muted)">@${u.username}</small>
+      const hdr = $('.upload-header h3', followersModal);
+      if(hdr) hdr.textContent = title;
+      const allReg = getRegisteredUsers();
+      const realFollowers = Object.keys(allReg).map(k => allReg[k]).filter(u => u.username !== loggedInUser);
+      container.innerHTML = realFollowers.length
+        ? realFollowers.map(u=>`
+          <div class="follower-user-item">
+            <img src="${u.avatar}" alt="${u.name}">
+            <div style="flex:1">
+              <b>${u.name}</b>
+              <small style="display:block;color:var(--muted)">@${u.username}</small>
+            </div>
+            <a class="follow-btn" href="profile.html?user=${encodeURIComponent(u.username)}" style="text-decoration:none;font-size:12px;">View</a>
           </div>
-          <button class="follow-btn following">Following</button>
-        </div>
-      `).join('');
+        `).join('')
+        : `<p class="muted" style="text-align:center;padding:24px">No registered users yet.</p>`;
       followersModal.classList.remove('hidden');
     };
 
-    if(openFollowersBtn) openFollowersBtn.addEventListener('click', ()=> showFollowers(`Followers (${profile.followers || '12.4K'})`));
-    if(openFollowingBtn) openFollowingBtn.addEventListener('click', ()=> showFollowers(`Following (${profile.following || '256'})`));
+    if(openFollowersBtn) openFollowersBtn.addEventListener('click', ()=> showFollowers(`Registered Creators`));
+    if(openFollowingBtn) openFollowingBtn.addEventListener('click', ()=> showFollowers(`Registered Creators`));
     if(closeFollowersBtn) closeFollowersBtn.addEventListener('click', ()=> followersModal.classList.add('hidden'));
 
     // Profile Tabs & Filtered Grid
@@ -1257,9 +1285,10 @@
       const renderTabGrid = (tabKey) => {
         if(tabKey === 'reels'){
           const customReels = store.json('custom_reels', []);
-          const allReels = customReels.concat(D.reels);
-          const userReels = allReels.filter(r => (r.author === targetUsername || r.user === targetUsername || isOwnProfile));
-          grid.innerHTML = (userReels.length ? userReels : D.reels).map(r=>`<a class="grid-card tall" data-info="🎬 ${r.views || '1.2K'} views" href="reels.html"><img src="${r.img}"></a>`).join('');
+          const userReels = isOwnProfile ? customReels : customReels.filter(r => r.author === targetUsername || r.user === targetUsername);
+          grid.innerHTML = userReels.length
+            ? userReels.map(r=>`<a class="grid-card tall" data-info="🎬 ${r.views || '1.2K'} views" href="reels.html"><img src="${r.img}"></a>`).join('')
+            : `<p class="muted" style="padding:32px;text-align:center;grid-column:1/-1">No reels yet. <a href="creator.html">Upload your first reel ✨</a></p>`;
         } else if(tabKey === 'saved'){
           const savedIds = store.json('saved', [101, 102]);
           const posts = D.posts.filter(p => savedIds.includes(p.id));
@@ -1278,9 +1307,10 @@
           });
         } else {
           const customPosts = store.json('custom_posts', []);
-          const allPosts = [...customPosts, ...D.posts];
-          const userPosts = allPosts.filter(p => (p.author === targetUsername || p.user === targetUsername || (isOwnProfile && (p.user === 1 || p.author === targetUsername))));
-          grid.innerHTML = (userPosts.length ? userPosts : D.posts).map(p => `<a class="grid-card" data-info="♡ ${(p.likes||100).toLocaleString()}" href="home.html#post-${p.id}"><img src="${p.img}"></a>`).join('');
+          const userPosts = isOwnProfile ? customPosts : customPosts.filter(p => p.author === targetUsername || p.user === targetUsername);
+          grid.innerHTML = userPosts.length
+            ? userPosts.map(p => `<a class="grid-card" data-info="♡ ${(p.likes||0).toLocaleString()}" href="home.html"><img src="${p.img||p.videoUrl||'assets/logo-icon.png'}"></a>`).join('')
+            : `<p class="muted" style="padding:32px;text-align:center;grid-column:1/-1">No posts yet. <a href="creator.html">Create your first post ✨</a></p>`;
         }
       };
 
@@ -1296,42 +1326,23 @@
       });
     }
 
-    // Render Suggested Creators Section on Profile
+    // Render Suggested Creators Section on Profile (real registered users only)
     const suggestionsContainer = $('#profileSuggestionsContainer');
     if(suggestionsContainer){
-      const suggestedUsers = [
-        { name: 'Riya Music', username: 'riya.vibe', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', info: '🎵 Tamil BGM Creator' },
-        { name: 'Arun Gaming', username: 'arun_gaming', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', info: '🎮 Live Streamer' },
-        { name: 'Nila Voice', username: 'nila_voice', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80', info: '🎙️ Voice & Songs' }
-      ];
-
-      suggestionsContainer.innerHTML = suggestedUsers.map(u => `
-        <div class="feature-card glass" style="text-align:center;padding:18px;">
-          <img class="avatar" src="${u.avatar}" style="width:70px;height:70px;margin:0 auto 10px;display:block;border:2px solid var(--brand)">
-          <b style="display:block;font-size:16px">${u.name}</b>
-          <small style="color:var(--muted);display:block;margin:4px 0 12px">@${u.username} • ${u.info}</small>
-          <button type="button" class="primary-btn js-profile-follow-btn" style="width:100%;padding:9px 14px;font-size:13px">Follow</button>
-        </div>
-      `).join('');
-
-      $$('.js-profile-follow-btn', suggestionsContainer).forEach(btn => {
-        btn.addEventListener('click', () => {
-          const isFollowing = btn.classList.contains('following');
-          if(isFollowing){
-            btn.classList.remove('following');
-            btn.textContent = 'Follow';
-            btn.style.background = 'linear-gradient(135deg, var(--brand), #ff3d00)';
-            toast('Unfollowed user');
-          } else {
-            btn.classList.add('following');
-            btn.textContent = 'Following ✓';
-            btn.style.background = 'var(--panel2)';
-            btn.style.color = 'var(--muted)';
-            toast('Following user! ✨');
-            if(window.BoundUpSound) window.BoundUpSound.playLike();
-          }
-        });
-      });
+      const allReg = getRegisteredUsers();
+      const realSuggested = Object.keys(allReg).map(k => allReg[k]).filter(u => u.username !== loggedInUser);
+      if(realSuggested.length === 0){
+        suggestionsContainer.innerHTML = `<p class="muted" style="font-size:13px;padding:12px 0;text-align:center">No other creators yet. Invite friends to BoundUp!</p>`;
+      } else {
+        suggestionsContainer.innerHTML = realSuggested.slice(0, 3).map(u => `
+          <div class="feature-card glass" style="text-align:center;padding:18px;">
+            <img class="avatar" src="${u.avatar}" style="width:70px;height:70px;margin:0 auto 10px;display:block;border:2px solid var(--brand)">
+            <b style="display:block;font-size:16px">${u.name}</b>
+            <small style="color:var(--muted);display:block;margin:4px 0 12px">@${u.username}</small>
+            <a class="primary-btn" href="profile.html?user=${encodeURIComponent(u.username)}" style="width:100%;padding:9px 14px;font-size:13px;display:block;text-align:center;">View Profile</a>
+          </div>
+        `).join('');
+      }
     }
   }
 
@@ -1791,6 +1802,15 @@
 
   document.addEventListener('DOMContentLoaded',()=>{
     const safeExec = (fn) => { try { if (typeof fn === 'function') fn(); } catch(e) {} };
+
+    // Strict Page Auth Guard - No guest mode, Login compulsory
+    const publicPages = ['welcome', 'login', 'signup', 'index', 'splash', 'about', 'mobile-showcase'];
+    if (!publicPages.includes(page) && !isLoggedIn()) {
+      toast('🔒 Login required to access BoundUp!');
+      setTimeout(() => location.href = 'login.html', 400);
+      return;
+    }
+
     safeExec(initSplash);
     safeExec(initTheme);
     safeExec(installChrome);
