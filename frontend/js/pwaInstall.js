@@ -3,6 +3,7 @@
  * Detects mobile browsers, shows mobile app download banner, and simulates live APK download
  */
 (function(window) {
+  const $ = (s, r=document) => r.querySelector(s);
   let deferredPrompt = null;
 
   function isMobileDevice() {

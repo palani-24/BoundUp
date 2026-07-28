@@ -1399,7 +1399,30 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    initTheme(); installChrome(); applyLang(); renderStories(); initStoryEvents(); renderFeed(); renderRightPanel(); renderExplore(); renderReels(); initChat(); initAuth(); initSettings(); initDownload(); initSplash(); renderProfile(); initEditProfileModal(); renderSavedHistory(); initCreatePost(); initReelsUploadModal(); initVideoPlayerModalEvents(); initPushNotifications(); initReelsLiveStream(); initWebRTCCalls();
+    const safeExec = (fn) => { try { if (typeof fn === 'function') fn(); } catch(e) {} };
+    safeExec(initSplash);
+    safeExec(initTheme);
+    safeExec(installChrome);
+    safeExec(applyLang);
+    safeExec(renderStories);
+    safeExec(initStoryEvents);
+    safeExec(renderFeed);
+    safeExec(renderRightPanel);
+    safeExec(renderExplore);
+    safeExec(renderReels);
+    safeExec(initChat);
+    safeExec(initAuth);
+    safeExec(initSettings);
+    safeExec(initDownload);
+    safeExec(renderProfile);
+    safeExec(initEditProfileModal);
+    safeExec(renderSavedHistory);
+    safeExec(initCreatePost);
+    safeExec(initReelsUploadModal);
+    safeExec(initVideoPlayerModalEvents);
+    safeExec(initPushNotifications);
+    safeExec(initReelsLiveStream);
+    safeExec(initWebRTCCalls);
     document.body.classList.add('ready');
   });
 })();
