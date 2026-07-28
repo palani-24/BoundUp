@@ -1,11 +1,12 @@
 /**
- * BoundUp Web Audio Engine & Real Sound FX Generator
- * Synthesizes real-time sound effects (notification chimes, call ringtones, like pops, video audio controls & BGM beats)
- * Includes Instant Audio Cutoff on Modal Close (stopAllAudio)
+ * BoundUp Web Audio Engine & Real MP3 Song Streaming Player
+ * Synthesizes real-time sound effects (notification chimes, call ringtones, like pops)
+ * & Streams Real MP3 Audio Songs (Tamil Melodies, Flute, Piano, Acoustic, Bass Drops)
  */
 (function(window) {
   let audioCtx = null;
   let bgmInterval = null;
+  let realSongAudioEl = null;
 
   function getAudioContext() {
     if (!audioCtx) {
@@ -20,12 +21,27 @@
     return audioCtx;
   }
 
+  function getRealSongPlayer() {
+    if (!realSongAudioEl) {
+      realSongAudioEl = document.getElementById('boundupRealSongPlayer');
+      if (!realSongAudioEl) {
+        realSongAudioEl = document.createElement('audio');
+        realSongAudioEl.id = 'boundupRealSongPlayer';
+        realSongAudioEl.style.display = 'none';
+        realSongAudioEl.loop = true;
+        document.body.appendChild(realSongAudioEl);
+      }
+    }
+    return realSongAudioEl;
+  }
+
   let ringtoneInterval = null;
   let ringbackInterval = null;
 
   const BoundUpSound = {
     init() {
       getAudioContext();
+      getRealSongPlayer();
     },
 
     // Sweet double-tone notification chime for incoming messages / alerts
@@ -113,6 +129,35 @@
       } catch (e) {}
     },
 
+    // Stream Real MP3 Audio Songs (with synth fallback)
+    playRealSongTrack(audioUrl, fallbackGenre = 'love') {
+      this.stopVideoMusic();
+      const player = getRealSongPlayer();
+
+      if (audioUrl && typeof audioUrl === 'string' && audioUrl.length > 5) {
+        try {
+          if (player.src !== audioUrl) {
+            player.src = audioUrl;
+          }
+          player.volume = 1.0;
+          player.muted = false;
+          const playPromise = player.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              // Fallback to synth if audio stream blocked
+              this.playVideoMusicTrack(fallbackGenre);
+            });
+          }
+          return;
+        } catch(e) {
+          console.log('Audio player streaming fallback:', e);
+        }
+      }
+
+      // Synth fallback if no direct MP3 URL
+      this.playVideoMusicTrack(fallbackGenre);
+    },
+
     // Dynamic Tamil Mass BGM & Tamil Love Song Melody Synthesizer
     playVideoMusicTrack(genre = 'mass') {
       this.stopVideoMusic();
@@ -178,15 +223,21 @@
         clearInterval(bgmInterval);
         bgmInterval = null;
       }
+      if (realSongAudioEl) {
+        try {
+          realSongAudioEl.pause();
+          realSongAudioEl.currentTime = 0;
+          realSongAudioEl.src = '';
+        } catch(e) {}
+      }
     },
 
-    // Instant Audio & Sound Cutoff: Stops all video playback & all Web Audio sounds completely!
+    // Instant Audio & Sound Cutoff: Stops all video playback & all Real Song / Web Audio sounds completely!
     stopAllAudio() {
       this.stopVideoMusic();
       this.stopRingtone();
       this.stopRingback();
 
-      // Pause all video & audio elements on document
       const mediaElements = Array.from(document.querySelectorAll('video, audio'));
       mediaElements.forEach(el => {
         try {
@@ -197,7 +248,7 @@
     },
 
     // Enable Video Sound: handles unmuting HTML5 audio & synchronized sound beat
-    enableVideoSound(videoEl, btnEl, genre = 'mass') {
+    enableVideoSound(videoEl, btnEl, genre = 'mass', audioUrl = null) {
       this.init();
       if (!videoEl) return;
 
@@ -207,9 +258,9 @@
         const playPromise = videoEl.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
-            this.playVideoMusicTrack(genre);
+            this.playRealSongTrack(audioUrl, genre);
           }).catch(err => {
-            this.playVideoMusicTrack(genre);
+            this.playRealSongTrack(audioUrl, genre);
           });
         }
         if (btnEl) {
@@ -218,7 +269,7 @@
         }
       } else {
         videoEl.muted = true;
-        this.stopVideoMusic();
+        this.stopAllAudio();
         if (btnEl) {
           btnEl.classList.remove('unmuted');
           btnEl.innerHTML = `🔇 <span class="sound-label">Muted</span>`;
@@ -337,6 +388,7 @@
 
   const unlockAudio = () => {
     getAudioContext();
+    getRealSongPlayer();
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
   };

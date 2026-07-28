@@ -1,4 +1,14 @@
 window.BOUNDUP_DATA = {
+  // Public Royalty-Free Audio Stream URLs for real MP3 song playback
+  audioTracks: {
+    kadhale: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3',
+    nira: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70512.mp3?filename=acoustic-guitar-love-song-18945.mp3',
+    kannazhaga: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=violin-romantic-cinematic-11023.mp3',
+    anbae: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_2c9183424d.mp3?filename=soft-piano-romance-124458.mp3',
+    mass: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8b74a3f12.mp3?filename=mass-bass-drop-action-19823.mp3',
+    chill: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db65912a77.mp3?filename=chill-lofi-song-110321.mp3'
+  },
+
   users: [
     {
       id: 1,
@@ -81,10 +91,11 @@ window.BOUNDUP_DATA = {
       img: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1200&q=80',
       isVideo: true,
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      audioTrack: '💕 Kadhale Kadhale • Flute Romance BGM',
-      caption: 'Kadhale Kadhale romantic flute vibe in Tamil 🌸 Turn sound on! 💕 #TamilLoveSong #BoundUpRomance',
-      likes: 5420,
-      comments: 612,
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3',
+      audioTrack: '💕 Kadhale Kadhale • Real Flute Song',
+      caption: 'Kadhale Kadhale romantic flute melody playing live 💕 Tap sound to listen real song! #TamilLoveSong',
+      likes: 8420,
+      comments: 712,
       tag: 'Tamil Love Song'
     },
     {
@@ -93,11 +104,38 @@ window.BOUNDUP_DATA = {
       img: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80',
       isVideo: true,
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      audioTrack: '💕 Nira Nira • Acoustic Sunset Love Track',
-      caption: 'Sunset vibes with Nira Nira acoustic melody 🌇 Tag someone special! 💕 #LoveSongs #TamilMelody',
-      likes: 4890,
-      comments: 520,
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70512.mp3?filename=acoustic-guitar-love-song-18945.mp3',
+      audioTrack: '💕 Nira Nira • Real Acoustic Song',
+      caption: 'Sunset acoustic vibes with Nira Nira real guitar song 🌇 #LoveSongs #TamilMelody',
+      likes: 6890,
+      comments: 590,
       tag: 'Acoustic Vibe'
+    },
+    {
+      id: 103,
+      user: 7,
+      img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=80',
+      isVideo: true,
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=violin-romantic-cinematic-11023.mp3',
+      audioTrack: '💕 Kannazhaga • Real Violin Song',
+      caption: 'Kannazhaga violin cinematic edit live 🎻 Feel the real violin melody! #CinemaEdit',
+      likes: 9240,
+      comments: 840,
+      tag: 'Violin Romance'
+    },
+    {
+      id: 104,
+      user: 4,
+      img: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=1200&q=80',
+      isVideo: true,
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_2c9183424d.mp3?filename=soft-piano-romance-124458.mp3',
+      audioTrack: '💕 Anbae Anbae • Real Piano Romance',
+      caption: 'Soft piano romance melody for calm evenings 🎹 #PianoRomance #ChillVibes',
+      likes: 4120,
+      comments: 310,
+      tag: 'Piano Melody'
     },
     {
       id: 1,
@@ -105,7 +143,7 @@ window.BOUNDUP_DATA = {
       img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
       isVideo: false,
       videoUrl: '',
-      audioTrack: '💕 Kannazhaga • Soft Violin Melody',
+      audioTrack: 'Original Audio - Sam Bound',
       caption: 'Cloudy evening + good vibe people 🧡 #BoundUp #NeonCity',
       likes: 1420,
       comments: 128,
@@ -117,10 +155,11 @@ window.BOUNDUP_DATA = {
       img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
       isVideo: true,
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      audioTrack: '🔥 Tamil Mass BGM • Riya Music Remix',
-      caption: 'New Tamil mass BGM mood is live! Unmute for sound 🔥 #MusicStory #TamilBGM',
-      likes: 3980,
-      comments: 487,
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8b74a3f12.mp3?filename=mass-bass-drop-action-19823.mp3',
+      audioTrack: '🔥 Tamil Mass BGM Drop • Real Bass Song',
+      caption: 'New Tamil mass BGM mood is live! Real bass audio stream playing 🔥 #TamilBGM',
+      likes: 7980,
+      comments: 687,
       tag: 'Music'
     },
     {
@@ -142,37 +181,51 @@ window.BOUNDUP_DATA = {
       id: 101,
       img: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=800&q=80',
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      title: 'Kadhale Kadhale Romance 💕',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-flute-melody-112348.mp3',
+      title: 'Kadhale Kadhale Real Song 💕',
       author: 'riya.vibe',
-      audioTrack: '💕 Kadhale Kadhale • Tamil Flute Melody',
-      views: '2.5M'
+      audioTrack: '💕 Kadhale Kadhale • Real Flute Song',
+      views: '3.8M'
     },
     {
       id: 102,
       img: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80',
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      title: 'Nira Nira Sunset Vibe 🌅',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70512.mp3?filename=acoustic-guitar-love-song-18945.mp3',
+      title: 'Nira Nira Sunset Love 🌅',
       author: 'ananya_tunes',
-      audioTrack: '💕 Nira Nira • Acoustic Cut',
-      views: '1.9M'
+      audioTrack: '💕 Nira Nira • Real Acoustic Guitar',
+      views: '2.9M'
     },
     {
       id: 103,
       img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=violin-romantic-cinematic-11023.mp3',
       title: 'Kannazhaga Violin Cut 🎻',
       author: 'karthik_fx',
-      audioTrack: '💕 Kannazhaga • Violin Romance',
-      views: '3.1M'
+      audioTrack: '💕 Kannazhaga • Real Violin Song',
+      views: '4.2M'
+    },
+    {
+      id: 104,
+      img: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=800&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_2c9183424d.mp3?filename=soft-piano-romance-124458.mp3',
+      title: 'Anbae Anbae Piano Cut 🎹',
+      author: 'riya.vibe',
+      audioTrack: '💕 Anbae Anbae • Piano Cut',
+      views: '1.9M'
     },
     {
       id: 1,
       img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
       videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      audioSrc: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8b74a3f12.mp3?filename=mass-bass-drop-action-19823.mp3',
       title: 'Tamil Mass BGM Drop 🔥',
       author: 'riya.vibe',
-      audioTrack: 'Riya Music - Mass Bass Drop Mix',
-      views: '1.8M'
+      audioTrack: 'Riya Music - Real Bass Song Mix',
+      views: '2.8M'
     }
   ],
 
@@ -221,7 +274,7 @@ window.BOUNDUP_DATA = {
       profile: 'प्रोफाइल',
       settings: 'सेटिंग्स',
       download: 'डाउनलोड',
-      about: 'अबाउट',
+      about: 'அபாவுட்',
       search: 'लोग, पोस्ट, रील खोजें',
       suggestions: 'आपके लिए सुझाव',
       trending: 'BoundUp पर ट्रेंडिंग',

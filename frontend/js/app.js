@@ -238,13 +238,14 @@
     modal.classList.remove('hidden');
 
     const soundGenre = (videoData.audioTrack && (videoData.audioTrack.includes('💕') || videoData.audioTrack.toLowerCase().includes('kadhale') || videoData.audioTrack.toLowerCase().includes('love') || videoData.audioTrack.toLowerCase().includes('nira'))) ? 'love' : 'mass';
+    const realAudioUrl = videoData.audioSrc || (D.audioTracks && D.audioTracks[soundGenre]);
 
     const playPromise = player.play();
     if(playPromise !== undefined){
       playPromise.then(()=>{
-        if(window.BoundUpSound) window.BoundUpSound.playVideoMusicTrack(soundGenre);
+        if(window.BoundUpSound) window.BoundUpSound.playRealSongTrack(realAudioUrl, soundGenre);
       }).catch(err=>{
-        if(window.BoundUpSound) window.BoundUpSound.playVideoMusicTrack(soundGenre);
+        if(window.BoundUpSound) window.BoundUpSound.playRealSongTrack(realAudioUrl, soundGenre);
       });
     }
   }
@@ -306,6 +307,7 @@
             username: u.username,
             caption: post.caption,
             audioTrack: post.audioTrack,
+            audioSrc: post.audioSrc,
             videoUrl: post.videoUrl || post.img
           });
         }
@@ -317,14 +319,18 @@
         const video = btn.previousElementSibling;
         const card = btn.closest('[data-post-id]');
         let soundGenre = 'mass';
+        let audioSrc = null;
         if(card){
+          const id = Number(card.dataset.postId);
+          const post = [...store.json('custom_posts', []), ...D.posts].find(p => p.id === id);
+          if(post) audioSrc = post.audioSrc;
           const trackText = $('.audio-track-tag', card)?.textContent || '';
           if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
             soundGenre = 'love';
           }
         }
         if(video && window.BoundUpSound){
-          window.BoundUpSound.enableVideoSound(video, btn, soundGenre);
+          window.BoundUpSound.enableVideoSound(video, btn, soundGenre, audioSrc);
         }
       });
     });
@@ -376,18 +382,24 @@
             username: reel.author || 'creator',
             caption: reel.title,
             audioTrack: reel.audioTrack,
+            audioSrc: reel.audioSrc,
             videoUrl: reel.videoUrl
           });
         }
       });
     });
 
-    $$('.js-reel-sound-toggle',el).forEach(btn=>{
+    $$('.js-reel-sound-toggle',el).forEach((btn, idx)=>{
       btn.addEventListener('click',(e)=>{
         e.stopPropagation();
         const video = btn.previousElementSibling;
         const card = btn.closest('.reel-card');
         let soundGenre = 'mass';
+        let audioSrc = null;
+        const customReels = store.json('custom_reels', []);
+        const allReels = [...customReels, ...D.reels];
+        if(allReels[idx]) audioSrc = allReels[idx].audioSrc;
+
         if(card){
           const trackText = $('.audio-track-tag', card)?.textContent || '';
           if(trackText.includes('💕') || trackText.toLowerCase().includes('kadhale') || trackText.toLowerCase().includes('love') || trackText.toLowerCase().includes('nira')){
@@ -395,7 +407,7 @@
           }
         }
         if(video && window.BoundUpSound){
-          window.BoundUpSound.enableVideoSound(video, btn, soundGenre);
+          window.BoundUpSound.enableVideoSound(video, btn, soundGenre, audioSrc);
         }
       });
     });
