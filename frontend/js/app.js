@@ -139,9 +139,49 @@
 
   function postHtml(p){
     const u=userById(p.user), liked=store.json('liked',[]).includes(p.id), saved=store.json('saved',[]).includes(p.id);
-    const isVideo = p.img && p.img.endsWith('.mp4');
-    const mediaTag = isVideo ? `<video class="post-img" src="${p.img}" controls autoplay loop muted></video>` : `<img class="post-img" src="${p.img}" alt="${p.tag}">`;
-    return `<article class="post fade-up" data-post-id="${p.id}"><header class="post-head"><a class="user-mini" href="profile.html?u=${u.id}"><img class="avatar" src="${u.avatar}" alt="${u.name}"><span><b>${u.username}</b><small>${p.tag} • 2h</small></span></a><button class="more">⋯</button></header>${mediaTag}<div class="post-actions"><div class="icon-row"><button class="icon-btn js-like ${liked?'liked':''}" title="Like">${liked?'♥':'♡'}</button><button class="icon-btn js-comment-focus" title="Comment">💬</button><button class="icon-btn js-share" title="Share">↗</button></div><button class="icon-btn js-save" title="Save">${saved?'★':'☆'}</button></div><div class="post-body"><div class="likes"><span class="js-like-count">${(p.likes+(liked?1:0)).toLocaleString()}</span> likes</div><div class="caption"><b>${u.username}</b>${p.caption}</div><a class="comments-link" href="#">View all ${p.comments} comments</a></div><form class="comment-box js-comment-form"><input placeholder="Add a comment..."><button>Post</button></form></article>`;
+    const isVideo = p.isVideo || (p.img && p.img.endsWith('.mp4')) || p.videoUrl;
+    const videoSrc = p.videoUrl || p.img;
+    const audioTrackName = p.audioTrack || 'Original Audio • BoundUp Sound';
+
+    let mediaTag = `<img class="post-img" src="${p.img}" alt="${p.tag}">`;
+    if (isVideo) {
+      mediaTag = `<div class="video-wrap">
+        <video class="post-img js-post-video" src="${videoSrc}" poster="${p.img}" loop muted playsinline></video>
+        <button class="video-sound-btn js-sound-toggle">🔇 <span class="sound-label">Muted</span></button>
+      </div>`;
+    }
+
+    return `<article class="post fade-up" data-post-id="${p.id}">
+      <header class="post-head">
+        <a class="user-mini" href="profile.html?u=${u.id}">
+          <img class="avatar" src="${u.avatar}" alt="${u.name}">
+          <span><b>${u.username}</b><small>${p.tag} • 2h</small></span>
+        </a>
+        <button class="more">⋯</button>
+      </header>
+      ${mediaTag}
+      <div class="post-actions">
+        <div class="icon-row">
+          <button class="icon-btn js-like ${liked?'liked':''}" title="Like">${liked?'♥':'♡'}</button>
+          <button class="icon-btn js-comment-focus" title="Comment">💬</button>
+          <button class="icon-btn js-share" title="Share">↗</button>
+        </div>
+        <button class="icon-btn js-save" title="Save">${saved?'★':'☆'}</button>
+      </div>
+      <div class="post-body">
+        <div class="likes"><span class="js-like-count">${(p.likes+(liked?1:0)).toLocaleString()}</span> likes</div>
+        <div class="caption"><b>${u.username}</b> ${p.caption}</div>
+        <div class="audio-track-tag">
+          <div class="sound-wave-icon"><span></span><span></span><span></span></div>
+          <span>${audioTrackName}</span>
+        </div>
+        <a class="comments-link" href="#">View all ${p.comments} comments</a>
+      </div>
+      <form class="comment-box js-comment-form">
+        <input placeholder="Add a comment...">
+        <button>Post</button>
+      </form>
+    </article>`;
   }
 
   function renderFeed(){
@@ -154,20 +194,45 @@
 
   function renderRightPanel(){
     const el=$('#rightPanel'); if(!el) return;
-    el.innerHTML=`<div class="side-card glass"><div class="profile-mini"><img class="avatar" src="assets/avatar-1.svg"><div><b>Sam Bound</b><div class="muted">@itz_sam</div></div><a class="switch" href="profile.html">View</a></div><h3 data-i18n="suggestions">${t.suggestions||'Suggested for you'}</h3>${D.users.slice(1,6).map(u=>`<div class="suggestion"><img class="avatar" src="${u.avatar}"><div><b>${u.name}</b><div class="muted">${u.followers} followers</div></div><button class="follow-btn js-follow">Follow</button></div>`).join('')}</div><div class="side-card glass"><h3 data-i18n="trending">${t.trending||'Trending on BoundUp'}</h3>${['#TamilBGM','#MoodMatch','#AIFeed','#CreatorRoom','#GamingAura','#VoiceBubble'].map(x=>`<span class="trend-tag">${x}</span>`).join('')}</div>`;
+    const mainUser = D.users[0];
+    el.innerHTML=`<div class="side-card glass">
+      <div class="profile-mini">
+        <img class="avatar" src="${mainUser.avatar}">
+        <div><b>${mainUser.name}</b><div class="muted">@${mainUser.username}</div></div>
+        <a class="switch" href="profile.html">View</a>
+      </div>
+      <h3 data-i18n="suggestions">${t.suggestions||'Suggested for you'}</h3>
+      ${D.users.slice(1,6).map(u=>`<div class="suggestion"><img class="avatar" src="${u.avatar}"><div><b>${u.name}</b><div class="muted">${u.followers} followers</div></div><button class="follow-btn js-follow">Follow</button></div>`).join('')}
+    </div>
+    <div class="side-card glass">
+      <h3 data-i18n="trending">${t.trending||'Trending on BoundUp'}</h3>
+      ${['#TamilBGM','#MoodMatch','#AIFeed','#CreatorRoom','#GamingAura','#VoiceBubble'].map(x=>`<span class="trend-tag">${x}</span>`).join('')}
+    </div>`;
     $$('.js-follow',el).forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('following');btn.textContent=btn.classList.contains('following')?'Following':'Follow';toast(btn.textContent)}));
   }
 
   function bindPostActions(root=document){
     $$('.js-like',root).forEach(btn=>btn.addEventListener('click',()=>{
       const card=btn.closest('[data-post-id]'), id=Number(card.dataset.postId); let liked=store.json('liked',[]); const count=$('.js-like-count',card); let n=Number(count.textContent.replace(/,/g,''));
-      if(liked.includes(id)){ liked=liked.filter(x=>x!==id); btn.textContent='♡'; btn.classList.remove('liked'); n--; } else { liked.push(id); btn.textContent='♥'; btn.classList.add('liked'); n++; }
+      if(liked.includes(id)){ liked=liked.filter(x=>x!==id); btn.textContent='♡'; btn.classList.remove('liked'); n--; } 
+      else { liked.push(id); btn.textContent='♥'; btn.classList.add('liked'); n++; if(window.BoundUpSound) window.BoundUpSound.playLike(); }
       store.setJson('liked',liked); count.textContent=n.toLocaleString();
     }));
+
+    $$('.js-sound-toggle',root).forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const video = btn.previousElementSibling;
+        if(video && window.BoundUpSound){
+          if(video.paused) video.play();
+          window.BoundUpSound.toggleVideoAudio(video, btn);
+        }
+      });
+    });
+
     $$('.js-save',root).forEach(btn=>btn.addEventListener('click',()=>{ const id=Number(btn.closest('[data-post-id]').dataset.postId); let saved=store.json('saved',[]); if(saved.includes(id)){saved=saved.filter(x=>x!==id);btn.textContent='☆';toast('Removed from favorites')} else {saved.push(id);btn.textContent='★';toast('Saved to favorites')} store.setJson('saved',saved); }));
     $$('.js-share',root).forEach(btn=>btn.addEventListener('click',()=>toast('Share link copied')));
     $$('.js-comment-focus',root).forEach(btn=>btn.addEventListener('click',()=>$('.js-comment-form input',btn.closest('.post')).focus()));
-    $$('.js-comment-form',root).forEach(f=>f.addEventListener('submit',e=>{e.preventDefault(); const input=$('input',f); if(input.value.trim()){toast('Comment added'); input.value='';}}));
+    $$('.js-comment-form',root).forEach(f=>f.addEventListener('submit',e=>{e.preventDefault(); const input=$('input',f); if(input.value.trim()){toast('Comment added'); if(window.BoundUpSound) window.BoundUpSound.playMessageSent(); input.value='';}}));
   }
 
   function renderExplore(){
@@ -178,10 +243,41 @@
 
   function renderReels(){
     const el=$('#reelsGrid'); if(!el) return;
-    el.innerHTML=D.reels.map(r=>`<article class="reel-card"><img src="${r.img}" alt="${r.title}"><div class="play">▶</div><div class="reel-overlay"><b>${r.title}</b><div>${r.views} views</div><div class="icon-row"><button class="icon-btn js-reel-like">♡</button><button class="icon-btn js-share">↗</button></div></div></article>`).join('');
-    $$('.js-reel-like',el).forEach(b=>b.addEventListener('click',()=>{b.textContent=b.textContent==='♡'?'♥':'♡';b.classList.toggle('liked');}));
-    $$('.js-share',el).forEach(b=>b.addEventListener('click',()=>toast('Reel shared')));
+    el.innerHTML=D.reels.map(r=>`<article class="reel-card">
+      <video class="reel-video js-reel-video" src="${r.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}" poster="${r.img}" loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+      <button class="video-sound-btn js-reel-sound-toggle" style="top:14px;bottom:auto;right:14px;">🔇</button>
+      <div class="reel-overlay">
+        <b>${r.title}</b>
+        <div class="audio-track-tag" style="color:white;margin:4px 0;">
+          <div class="sound-wave-icon"><span style="background:white"></span><span style="background:white"></span><span style="background:white"></span></div>
+          <span>${r.audioTrack || 'Original Audio'}</span>
+        </div>
+        <div>${r.views} views</div>
+        <div class="icon-row" style="margin-top:8px;">
+          <button class="icon-btn js-reel-like">♡</button>
+          <button class="icon-btn js-share">↗</button>
+        </div>
+      </div>
+    </article>`).join('');
+
+    $$('.js-reel-sound-toggle',el).forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const video = btn.previousElementSibling;
+        if(video && window.BoundUpSound){
+          if(video.paused) video.play();
+          window.BoundUpSound.toggleVideoAudio(video, btn);
+        }
+      });
+    });
+
+    $$('.js-reel-like',el).forEach(b=>b.addEventListener('click',()=>{
+      b.textContent=b.textContent==='♡'?'♥':'♡';
+      b.classList.toggle('liked');
+      if(window.BoundUpSound && b.classList.contains('liked')) window.BoundUpSound.playLike();
+    }));
+    $$('.js-share',el).forEach(b=>b.addEventListener('click',()=>toast('Reel link copied')));
   }
+
 
   /* FULL REAL-TIME MULTI-ACCOUNT CHAT & MESSAGE REQUEST SYSTEM */
   function initChat(){
@@ -256,6 +352,7 @@
           if(data.roomId === currentRoom && data.sender !== currentUser){
             appendBubble('other', data.text, data.media, data.time || getTimeString());
             saveMessageToRoom(currentRoom, data.sender, data.text, data.media);
+            if(window.BoundUpSound) window.BoundUpSound.playNotification();
           }
         });
         socket.on('message:incoming', (data)=>{
@@ -265,6 +362,7 @@
             store.setJson('chat_accepted_map', acceptedMap);
             renderContacts();
             toast(`New Message Request from @${data.sender}!`);
+            if(window.BoundUpSound) window.BoundUpSound.playNotification();
           }
         });
         socket.on('request:accepted', (data)=>{
@@ -276,6 +374,7 @@
           renderContacts();
           renderThread();
           toast(`@${data.from} accepted your message request!`);
+          if(window.BoundUpSound) window.BoundUpSound.playNotification();
         });
       } catch(err) {
         console.log('Socket connection offline:', err);
@@ -508,6 +607,7 @@
       // Append my message
       appendBubble('me', text, pendingMediaUrl, timeStr);
       saveMessageToRoom(roomId, currentUser, text, pendingMediaUrl);
+      if(window.BoundUpSound) window.BoundUpSound.playMessageSent();
 
       // Emit direct Socket event
       if(socket){
@@ -548,6 +648,7 @@
 
           appendBubble('ai', replyText, null, getTimeString());
           saveMessageToRoom(roomId, 'ai', replyText, null);
+          if(window.BoundUpSound) window.BoundUpSound.playNotification();
         }, 1300);
       }
     });

@@ -29,16 +29,17 @@
   <main class="page page-enter">
     <section class="mobile-detail-hero glass-panel">
       <div>
-        <p class="eyebrow">06 Calls & WebRTC</p>
-        <h1>Real WebRTC Video Call Interface</h1>
-        <p class="lead">Connect HD video calls, camera preview, microphone mute, speaker mode, and live signaling.</p>
+        <p class="eyebrow">06 Calls & Real Sound</p>
+        <h1>Real WebRTC Video Call & Ringtone Interface</h1>
+        <p class="lead">Connect HD video calls, real incoming/outgoing ringtone sounds, mic control, and video streams.</p>
         <div class="mobile-detail-actions">
+          <button class="btn primary" id="simulateIncomingBtn" style="background:var(--ok);color:white;">🔔 Test Incoming Call Ringtone</button>
           <button class="btn primary" id="startCallBtn">📞 Start Video Call</button>
           <button class="btn ghost" id="toggleMuteBtn">🎙 Mute Mic</button>
           <button class="btn ghost" id="toggleCamBtn">📹 Toggle Cam</button>
           <button class="btn ghost" id="endCallBtn" style="color:var(--danger)">✕ End Call</button>
         </div>
-        <p id="callStatusText" class="muted" style="margin-top:12px;font-weight:800">Status: Camera Ready</p>
+        <p id="callStatusText" class="muted" style="margin-top:12px;font-weight:800">Status: Idle</p>
       </div>
 
       <div class="call-video-grid">
@@ -47,13 +48,80 @@
           <span class="user-tag">You (Local Camera)</span>
         </div>
         <div class="video-stream-card">
-          <video id="remoteVideo" autoplay playsinline poster="assets/avatar-2.svg"></video>
-          <span class="user-tag" id="remoteUserTag">Arun (BoundUp Contact)</span>
+          <video id="remoteVideo" autoplay playsinline poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80"></video>
+          <span class="user-tag" id="remoteUserTag">Riya Music (Calling...)</span>
         </div>
       </div>
     </section>
   </main>
+  
+  <script src="js/soundEngine.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const incomingBtn = document.getElementById('simulateIncomingBtn');
+      const startBtn = document.getElementById('startCallBtn');
+      const endBtn = document.getElementById('endCallBtn');
+      const muteBtn = document.getElementById('toggleMuteBtn');
+      const statusText = document.getElementById('callStatusText');
+      let isCalling = false;
+      let micMuted = false;
+
+      incomingBtn.addEventListener('click', () => {
+        if (window.BoundUpSound) {
+          window.BoundUpSound.startRingtone();
+          statusText.textContent = "Status: 🔔 Incoming Call from Riya Music... (Ringtone Playing)";
+          statusText.style.color = "#ff6b00";
+        }
+      });
+
+      startBtn.addEventListener('click', async () => {
+        isCalling = true;
+        if (window.BoundUpSound) {
+          window.BoundUpSound.stopRingtone();
+          window.BoundUpSound.startRingback();
+        }
+        statusText.textContent = "Status: 📞 Ringing outgoing call...";
+        statusText.style.color = "#3b82f6";
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          document.getElementById('localVideo').srcObject = stream;
+          setTimeout(() => {
+            if (window.BoundUpSound) window.BoundUpSound.stopRingback();
+            statusText.textContent = "Status: 🟢 Connected Live Video Call";
+            statusText.style.color = "#22c55e";
+          }, 2500);
+        } catch(err) {
+          setTimeout(() => {
+            if (window.BoundUpSound) window.BoundUpSound.stopRingback();
+            statusText.textContent = "Status: 🟢 Connected (Demo Stream)";
+            statusText.style.color = "#22c55e";
+          }, 2000);
+        }
+      });
+
+      muteBtn.addEventListener('click', () => {
+        micMuted = !micMuted;
+        muteBtn.textContent = micMuted ? "🎙 Unmute Mic" : "🎙 Mute Mic";
+        if(window.boundToast) window.boundToast(micMuted ? "Microphone Muted" : "Microphone Active");
+      });
+
+      endBtn.addEventListener('click', () => {
+        isCalling = false;
+        if (window.BoundUpSound) {
+          window.BoundUpSound.playCallEnd();
+        }
+        const localVid = document.getElementById('localVideo');
+        if (localVid.srcObject) {
+          localVid.srcObject.getTracks().forEach(track => track.stop());
+          localVid.srcObject = null;
+        }
+        statusText.textContent = "Status: Call Ended";
+        statusText.style.color = "#ef4444";
+      });
+    });
+  </script>
 </body>
 </html>
