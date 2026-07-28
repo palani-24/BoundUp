@@ -1,1 +1,247 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Welcome | BoundUp</title><meta name="theme-color" content="#ff6b00"><link rel="manifest" href="manifest.json"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="css/style.css"><script defer src="js/data.js"></script><script defer src="js/app.js"></script></head><body class=" no-chrome"><div class="bg-orbs"></div><section class="welcome-wrap"><div class="welcome-card glass"><div class="hero"><a class="brand" href="home.html"><img src="assets/logo-icon.png" alt="BoundUp"><span>Bound<span>Up</span></span></a><h1>Social media, reimagined for AI creators.</h1><p>BoundUp is an Instagram-inspired social experience with feed, stories, reels, chat, AI captions, mood match and creator communities — using its own premium orange identity.</p><div class="btn-row"><a class="primary-btn" href="signup.html">Get Started</a><a class="ghost-btn" href="login.html">Login</a><a class="ghost-btn js-guest" href="home.html">Continue as Guest</a></div></div><div class="phone-preview"><div class="brand"><img src="assets/logo-icon.png"><span>Bound<span>Up</span></span></div><div class="phone-story-row" style="margin-top:18px"><div class="story-ring"><img src="assets/avatar-1.svg"></div><div class="story-ring"><img src="assets/avatar-2.svg"></div><div class="story-ring"><img src="assets/avatar-3.svg"></div><div class="story-ring"><img src="assets/avatar-4.svg"></div><div class="story-ring"><img src="assets/avatar-5.svg"></div></div><div class="phone-feed-card"><img src="assets/post-1.svg" style="width:100%;display:block"><div style="padding:14px"><b>♥ 12.4K likes</b><p>Cloudy evening + good vibe people 🧡</p></div></div></div></div></section></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BoundUp | Social Media Reimagined for AI & Tamil Creators</title>
+  <meta name="description" content="BoundUp is an Instagram-inspired social media platform with Tamil Love Songs, HD Reels, WebRTC Video Calls, AI Captions, and Mobile App support.">
+  <meta name="theme-color" content="#ff6b00">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/logo-icon.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="no-chrome">
+  <div class="bg-orbs"></div>
+
+  <!-- Landing Page Top Header Navigation -->
+  <header class="topbar glass-panel" style="position:sticky;top:0;z-index:100;background:rgba(10,10,12,0.85);backdrop-filter:blur(24px);padding:14px 28px;border-bottom:1px solid var(--line);">
+    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;width:100%;">
+      <a class="brand" href="welcome.html">
+        <img src="assets/logo-icon.png" alt="BoundUp Logo">
+        <span>Bound<span>Up</span></span>
+      </a>
+      <nav style="display:flex;gap:24px;align-items:center;" class="desktop-only">
+        <a href="#features" style="font-weight:800;color:var(--muted)">Features</a>
+        <a href="#stats" style="font-weight:800;color:var(--muted)">Stats</a>
+        <a href="#testimonials" style="font-weight:800;color:var(--muted)">Reviews</a>
+        <a href="#faq" style="font-weight:800;color:var(--muted)">FAQ</a>
+        <a href="mobile-showcase.html" style="font-weight:800;color:var(--brand)">📱 Mobile Showcase</a>
+      </nav>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <a class="ghost-btn" href="login.html">Login</a>
+        <a class="primary-btn" href="signup.html">Get Started 🚀</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="landing-hero-wrap">
+    <div class="welcome-card glass glow-card" style="width:100%;padding:48px;display:grid;grid-template-columns:1fr 400px;gap:36px;align-items:center;border-radius:36px;">
+      <div class="hero">
+        <span class="pill" style="background:rgba(255,107,0,0.15);color:var(--brand);font-weight:900;margin-bottom:14px;">🔥 Next-Gen Social Universe v7.2</span>
+        <h1 style="font-size:56px;letter-spacing:-0.06em;line-height:1.1;margin:14px 0">Social Media, Reimagined for AI & Tamil Creators.</h1>
+        <p style="font-size:19px;color:var(--muted);line-height:1.6;max-width:620px">
+          BoundUp brings together vertical HD Reels, Tamil Love Songs BGM, real-time WebRTC Video Calls, AI Auto-Captions, and multi-account message privacy — built with a stunning ultra-neon glass design.
+        </p>
+        <div class="btn-row" style="margin-top:28px">
+          <a class="primary-btn" href="signup.html" style="font-size:16px;padding:15px 28px">Join BoundUp Now 🚀</a>
+          <a class="ghost-btn" href="home.html" style="font-size:16px;padding:15px 24px">Explore Feed as Guest</a>
+          <button type="button" class="ghost-btn" onclick="if(window.BoundUpPWA) window.BoundUpPWA.downloadApk()" style="border-color:var(--brand);color:var(--brand)">📱 Download Android APK</button>
+        </div>
+      </div>
+
+      <!-- Phone Preview Mockup -->
+      <div class="phone-preview" style="height:580px">
+        <div class="brand">
+          <img src="assets/logo-icon.png">
+          <span>Bound<span>Up</span></span>
+        </div>
+        <div class="phone-story-row" style="margin-top:16px">
+          <div class="story-ring"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"></div>
+          <div class="story-ring"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80"></div>
+          <div class="story-ring"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"></div>
+        </div>
+        <div class="phone-feed-card" style="margin-top:14px">
+          <img src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=600&q=80" style="width:100%;height:240px;object-fit:cover;display:block">
+          <div style="padding:14px">
+            <b>♥ 12.8K likes • 💕 Kadhale Kadhale</b>
+            <p style="font-size:12px;margin:4px 0 0;opacity:0.8">Tamil romantic melody reel live on BoundUp 🌸</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Statistics Bar -->
+    <div class="landing-stats-grid" id="stats">
+      <div class="stat-box-card">
+        <h3>120K+</h3>
+        <p>Active Creators</p>
+      </div>
+      <div class="stat-box-card">
+        <h3>3.8M+</h3>
+        <p>Reels & Videos Played</p>
+      </div>
+      <div class="stat-box-card">
+        <h3>850K+</h3>
+        <p>Tamil Love Songs Shared</p>
+      </div>
+      <div class="stat-box-card">
+        <h3>99.9%</h3>
+        <p>WebRTC Uptime</p>
+      </div>
+    </div>
+
+    <!-- Features Section Grid -->
+    <div class="features-section-title" id="features">
+      <h2>Everything You Need in One Place</h2>
+      <p style="color:var(--muted);margin-top:8px;font-size:18px">Designed for high-speed engagement, rich audio, and creator freedom.</p>
+    </div>
+
+    <div class="features-grid-6">
+      <div class="feature-box">
+        <div class="feature-icon-bubble">📹</div>
+        <h3 style="font-size:20px;margin:0 0 8px">WebRTC HD Video Calls</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Connect 1-on-1 video calls with camera preview, microphone mute controls, and live ringtone audio.</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon-bubble">💕</div>
+        <h3 style="font-size:20px;margin:0 0 8px">Tamil Love Songs & BGM</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Built-in Tamil romantic music catalog and Web Audio synth that plays sound synchronized with videos.</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon-bubble">✨</div>
+        <h3 style="font-size:20px;margin:0 0 8px">AI Auto Captioning</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Generate aesthetic Tamil and English captions automatically for your posts and short video reels.</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon-bubble">🎬</div>
+        <h3 style="font-size:20px;margin:0 0 8px">Vertical HD Reels</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Upload local MP4 videos, pick audio tracks, and stream short vertical videos with audio equalizers.</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon-bubble">💬</div>
+        <h3 style="font-size:20px;margin:0 0 8px">Message Request Privacy</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Accept or decline message requests, switch between multiple accounts, and chat live with Socket.IO.</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-icon-bubble">📱</div>
+        <h3 style="font-size:20px;margin:0 0 8px">Mobile APK & PWA App</h3>
+        <p style="color:var(--muted);margin:0;line-height:1.5">Install directly on Android and iOS devices for offline access, faster loading, and full-screen experience.</p>
+      </div>
+    </div>
+
+    <!-- Testimonials / Creator Reviews -->
+    <div class="features-section-title" id="testimonials">
+      <h2>Loved by Creators Worldwide</h2>
+      <p style="color:var(--muted);margin-top:8px;font-size:18px">See what creators have to say about BoundUp.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;" class="cards3">
+      <div class="feature-box">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+          <div>
+            <b>Riya Music</b>
+            <small style="display:block;color:var(--muted)">@riya.vibe • 48K Followers</small>
+          </div>
+        </div>
+        <p style="color:var(--muted);margin:0;line-height:1.5">"The Tamil Love Songs audio feature and video player modal make sharing BGM reels so smooth. BoundUp is my favorite app!"</p>
+      </div>
+
+      <div class="feature-box">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+          <div>
+            <b>Arun Gaming</b>
+            <small style="display:block;color:var(--muted)">@arun_gaming • 35K Followers</small>
+          </div>
+        </div>
+        <p style="color:var(--muted);margin:0;line-height:1.5">"WebRTC video calls and gaming reels load super fast. The UI design looks like the future of social media."</p>
+      </div>
+
+      <div class="feature-box">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=120&q=80" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+          <div>
+            <b>Karthik Motion</b>
+            <small style="display:block;color:var(--muted)">@karthik_fx • 62K Followers</small>
+          </div>
+        </div>
+        <p style="color:var(--muted);margin:0;line-height:1.5">"Being able to upload custom video reels with instant audio cutoff on close gives total control. Incredible app!"</p>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="features-section-title" id="faq">
+      <h2>Frequently Asked Questions</h2>
+      <p style="color:var(--muted);margin-top:8px;font-size:18px">Got questions? We've got answers.</p>
+    </div>
+
+    <div class="faq-accordion-list">
+      <div class="faq-item-card js-faq-item">
+        <div class="faq-question-head">
+          <span>Is BoundUp free to use?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer-body hidden">
+          Yes! BoundUp is completely free to join, post videos, listen to Tamil songs, use AI captions, and make WebRTC video calls.
+        </div>
+      </div>
+
+      <div class="faq-item-card js-faq-item">
+        <div class="faq-question-head">
+          <span>How do I upload custom video reels?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer-body hidden">
+          Click the "Upload Reel Video" or "Add Video" button on the feed/reels page, select your local MP4 file, choose a Tamil audio track, and click Publish!
+        </div>
+      </div>
+
+      <div class="faq-item-card js-faq-item">
+        <div class="faq-question-head">
+          <span>Can I install BoundUp as a mobile app on Android?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer-body hidden">
+          Yes! Tap the "Download Android APK" button to download and install the mobile app directly onto your smartphone.
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top:90px;padding-top:40px;border-top:1px solid var(--line);text-align:center;color:var(--muted);">
+      <div class="brand" style="justify-content:center;margin-bottom:14px">
+        <img src="assets/logo-icon.png" alt="BoundUp">
+        <span>Bound<span>Up</span></span>
+      </div>
+      <p>© 2026 BoundUp Social Inc. Reimagined for AI Creators & Tamil Music Lovers.</p>
+    </footer>
+  </section>
+
+  <script src="js/soundEngine.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/pwaInstall.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const faqItems = document.querySelectorAll('.js-faq-item');
+      faqItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const body = item.querySelector('.faq-answer-body');
+          const toggle = item.querySelector('.faq-question-head span:last-child');
+          if (body) {
+            body.classList.toggle('hidden');
+            if (toggle) toggle.textContent = body.classList.contains('hidden') ? '+' : '−';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
