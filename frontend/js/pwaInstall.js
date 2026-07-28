@@ -12,6 +12,7 @@
 
   function initMobileAppBanner() {
     if ($('.mobile-app-banner')) return;
+    if (localStorage.getItem('boundup_pwa_banner_seen') === '1' || localStorage.getItem('boundup_banner_dismissed') === '1') return;
 
     const bannerHtml = `
       <div class="mobile-app-banner" id="mobileAppBanner">
@@ -38,12 +39,16 @@
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         if (banner) banner.remove();
-        sessionStorage.setItem('boundup_banner_dismissed', '1');
+        localStorage.setItem('boundup_pwa_banner_seen', '1');
+        localStorage.setItem('boundup_banner_dismissed', '1');
       });
     }
 
     if (installBtn) {
       installBtn.addEventListener('click', () => {
+        if (banner) banner.remove();
+        localStorage.setItem('boundup_pwa_banner_seen', '1');
+        localStorage.setItem('boundup_banner_dismissed', '1');
         triggerApkDownloadModal();
       });
     }
@@ -101,6 +106,8 @@
         setTimeout(() => {
           if (window.boundToast) window.boundToast('🚀 BoundUp App Installed Successfully!');
           modal.classList.add('hidden');
+          localStorage.setItem('boundup_pwa_banner_seen', '1');
+          localStorage.setItem('boundup_pwa_installed', '1');
         }, 1200);
       } else {
         if (bar) bar.style.width = progress + '%';
@@ -114,11 +121,13 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    initMobileAppBanner();
+    if (localStorage.getItem('boundup_pwa_banner_seen') !== '1') {
+      initMobileAppBanner();
+    }
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    if (!sessionStorage.getItem('boundup_banner_dismissed')) {
+    if (localStorage.getItem('boundup_pwa_banner_seen') !== '1' && localStorage.getItem('boundup_banner_dismissed') !== '1') {
       setTimeout(initMobileAppBanner, 1000);
     }
   });
